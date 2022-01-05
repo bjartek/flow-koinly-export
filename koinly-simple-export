@@ -1,0 +1,31 @@
+
+#!/bin/bash
+# A script to export FT transfers on flow and create a SIMPLE CSV format that Koinly will read
+# Created by bjartek, if you like this and want to support me send me some funds at https://find.xyz/bjartek
+# GraphQL api from flowscan used with permission
+
+set -euo pipefail
+
+[[ "$#" -lt 1 ]] && echo "koinly-simple-export <account>" && exit 1
+address=$1
+
+after=""
+morePages=true
+echo "Koinly Date, Amount, Currency, Label, TxHash" >> $address.csv
+while $morePages
+do
+	query='{"query":"query AccountTransfersQuery($address: ID!, $limit: Int!, $after: ID) {\n  account(id: $address) {\n    id\n    queryResult: transfers(take: $limit, after: $after) {\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      count\n      edges {\n        ...AccountTransfersTableFragment\n      }\n    }\n  }\n}\n\nfragment AccountTransfersTableFragment on TransferTransactionEdge {\n  node {\n    transaction {\n      id\n      time\n    }\n    fungibleTokenTransfers {\n      type\n      amount {\n        token {\n          id\n        }\n        value\n      }\n      transaction {\n        id\n        time\n      }\n      counterparty {\n        id\n      }\n      counterpartiesCount\n    }\n  }\n}\n", "variables":{"address":"'$address'","limit":30'$after'}}'
+
+	result=$(curl 'https://flowscan.org/query'  -s -H 'Accept-Encoding: gzip, deflate, br' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' --data-binary "$query")
+
+	endcursor=$(echo $result |jq '.data.account.queryResult.pageInfo.endCursor' -r)
+
+	echo $result | jq -r '.data.account.queryResult.edges[].node.fungibleTokenTransfers[] | [(.transaction.time | strftime("%Y-%m-%d %H:%M UTC")), (if .type == "Withdraw" then (.amount.value | tonumber)/100000000*-1 else (.amount.value | tonumber)/100000000 end), .amount.token.id, .counterparty.id, .transaction.id ] | @csv' >> $address.csv
+
+	after=",\"after\":\"$endcursor\""
+
+	echo $endcursor
+	if [[ "" == "$endcursor" ]]; then 
+		morePages=false
+	fi
+done
