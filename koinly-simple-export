@@ -7,7 +7,7 @@
 set -euo pipefail
 
 [[ "$#" -lt 1 ]] && echo "koinly-simple-export <account>" && exit 1
-address=$1
+address=$(curl "https://lookup.find.xyz/api/lookup?name=$1")
 
 after=""
 morePages=true
