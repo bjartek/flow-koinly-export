@@ -15,7 +15,7 @@ If you like this script and want to support me send me some FT over at https://f
 Download the file https://raw.githubusercontent.com/bjartek/flow-koinly-export/main/koinly-simple-export
 Execute it like so
 ```
-koinly-simple-export <your_account>
+koinly-simple-export <your_account|.find name>
 ```
 
 Will result in a csv file in your current directory with the name <your_account>.csv
