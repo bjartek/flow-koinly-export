@@ -9,6 +9,11 @@ set -euo pipefail
 [[ "$#" -lt 1 ]] && echo "koinly-simple-export <account>" && exit 1
 address=$1
 
+if [ "$1" == *".find"* ] || [ "$1" != "0x"* ]; then
+  findName=${address%".find"}
+  address=$(curl "https://lookup.find.xyz/api/$findName")
+fi
+
 after=""
 morePages=true
 echo "Koinly Date, Amount, Currency, Label, TxHash" > $address.csv
