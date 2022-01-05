@@ -6,6 +6,21 @@ Licensed under MIT.
 
 If you like this script and want to support me send me some FT over at https://find.xyz/bjartek
 
+## Requires
+ - curl
+ - jq
+
+
 ## How to use
-Download the file, execute it with your account. 
-Will result in a <account>.csv file in the same directly.
+Download the file https://raw.githubusercontent.com/bjartek/flow-koinly-export/main/koinly-simple-export
+Execute it like so
+```
+koinly-simple-export <your_account>
+```
+
+Will result in a csv file in your current directory with the name <your_account>.csv
+
+
+## Credits
+Thanks to https://flowscan.org for a graphql api and permission to use it for this script
+
