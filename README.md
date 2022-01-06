@@ -24,3 +24,6 @@ Will result in a csv file in your current directory with the name <your_account>
 ## Credits
 Thanks to https://flowscan.org for a graphql api and permission to use it for this script
 
+## referall
+
+Use my coinly referall link to save some cash https://koinly.io/?via=D607662E
