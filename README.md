@@ -21,6 +21,9 @@ koinly-simple-export <your_account|.find name>
 Will result in a csv file in your current directory with the name <your_account>.csv
 
 
+Note that if you had any flow before the public launch at 28.01.2020 it will not show in koinly. I have used 0.38 USD per Flow at that time since that is what the ICO auction ended at. 
+
+
 ## Credits
 Thanks to https://flowscan.org for a graphql api and permission to use it for this script
 
