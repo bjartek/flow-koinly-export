@@ -20,7 +20,7 @@ do
 
 	endcursor=$(echo $result |jq '.data.account.queryResult.pageInfo.endCursor' -r)
 
-	echo $result | jq -r '.data.account.queryResult.edges[].node.fungibleTokenTransfers[] | [(.transaction.time | strftime("%Y-%m-%d %H:%M UTC")), (if .type == "Withdraw" then (.amount.value | tonumber)/100000000*-1 else (.amount.value | tonumber)/100000000 end), (if .amount.token.id == "FT.A.1654653399040a61.FlowToken" then "ID:7961" elif .amount.token.id == "FT.A.0f9df91c9121c460.BloctoToken" then "ID:35927" elif .amount.token.id == "FT.A.3c5959b568896393.FUSD" then "ID:3504" elif .amount.token.id == "FT.A.cfdd90d4a00f7b5b.TeleportedTetherToken" then "USDT" else .amount.token.id end)  , .counterparty.id, .transaction.id ] | @csv' >> $address.csv
+	echo $result | jq -r '.data.account.queryResult.edges[].node.fungibleTokenTransfers[] | [(.transaction.time | strftime("%Y-%m-%d %H:%M UTC")), (if .type == "Withdraw" then (.amount.value | tonumber)/100000000*-1 else (.amount.value | tonumber)/100000000 end), (if .amount.token.id == "FT.A.1654653399040a61.FlowToken" then "ID:7961" elif .amount.token.id == "FT.A.0f9df91c9121c460.BloctoToken" then "ID:35927" elif .amount.token.id == "FT.A.3c5959b568896393.FUSD" then "ID:3054" elif .amount.token.id == "FT.A.cfdd90d4a00f7b5b.TeleportedTetherToken" then "USDT" else .amount.token.id end)  , .counterparty.id, .transaction.id ] | @csv' >> $address.csv
 
 	after=",\"after\":\"$endcursor\""
 
