@@ -1,5 +1,7 @@
 # Flow-Koinly-Export
 
+NB! This does not work anymore after the introduction of flowgraph. Will update this to use flowgraph in the future. 
+
 The provided bash script will convert FT transactions from a single account into the [SIMPLE format](https://help.koinly.io/en/articles/3662999-how-to-create-a-custom-csv-file-with-your-data)
 
 Licensed under MIT.
