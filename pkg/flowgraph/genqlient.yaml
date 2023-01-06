@@ -1,0 +1,15 @@
+# Default genqlient config; for full documentation see:
+# https://github.com/Khan/genqlient/blob/main/docs/genqlient.yaml
+schema: schema.graphql
+operations:
+- genqlient.graphql
+generated: flowgraph.go
+package: flowgraph
+bindings:
+  UFix64:
+    type: string
+  Time:
+    type: time.Time
+  JSON:
+    type: interface{}
+

@@ -1,0 +1,3279 @@
+"""
+ Represents an account in the Flow blockchain
+"""
+type Account {
+  """
+   The address of the account
+  """
+  address: ID!
+
+  """
+   Flow balance of this account
+  """
+  balance: UFix64!
+
+  """
+   The domain names of this account
+  """
+  domainNames: [DomainName!]!
+
+  """
+   Contracts deployed to this account
+  """
+  contracts: [Contract!]!
+
+  """
+   The creation transaction of this account
+  """
+  creation: Transaction
+
+  """
+   Query the transactions which this account acts as the authorizer, proposer, or payer
+  """
+  transactions(
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter to the transactions where this account only acts as
+    """
+    role: TransactionRole
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): TransactionConnection!
+
+  """
+   Get the number of transactions that is authorized, proposed or paid by this account
+  """
+  transactionCount(
+    """
+     (Optional) Filter to only transactions where this account only acts as
+    """
+    role: TransactionRole
+  ): Int!
+
+  """
+   Query token transfers that is coming to / from this account
+  """
+  tokenTransfers(
+    """
+    (Optional) Filter to only transfers of the given token contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+
+    """
+     (Optional) Filter to only transfers of the given type
+    """
+    type: TransferType
+
+    """
+     (Optional) Filter to only transfers where one of the counterparties is the given account
+    """
+    counterpartyId: ID
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): TokenTransferConnection!
+
+  """
+   Get the number of token transfers that is coming to / from this account
+  """
+  tokenTransferCount(
+    """
+    (Optional) Filter to only transfers of the given token contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+  ): Int!
+
+  """
+   Query NFT transfers that is coming to / from this account
+  """
+  nftTransfers(
+    """
+    (Optional) Filter to only transfers of the given token contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+
+    """
+     (Optional) Filter to only transfers of the given NFT ID. The `contractId` filter is required for this filter to be used.
+    """
+    nftId: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the sender
+    """
+    from: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the receiver
+    """
+    to: ID
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): NFTTransferConnection!
+
+  """
+   Get the number of NFT transfers that is coming to / from this account
+  """
+  nftTransferCount(
+    """
+    (Optional) Filter to only transfers of the given token contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+  ): Int!
+
+  """
+  Get the number of asset transfers (tokens and NFTs) that is coming to / from this account.
+  This value can also be retrieved by adding tokenTransferCount and nftTransferCount
+  """
+  transferCount: Int!
+
+  """
+  Query transactions with transfers (both token and NFTs) that is related with this account.
+
+  This is a special query designed to query all asset transfers of an account.
+  """
+  transferTransactions(
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+    (Optional) The number of transfers retrieved for each of the transactions, defaults to 10.
+    For more control, you could query`Transaction.tokenTransfers` or `Transaction.nftTransfers` directly.
+    """
+    each: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): AccountTransferConnection!
+
+  """
+   Query the token balances of this account, ordered by the USD valuation
+  """
+  tokenBalances(
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+  ): TokenBalanceConnection!
+
+  """
+   Get this account balance of a particular token
+  """
+  tokenBalance(contractId: ID!): TokenAmount
+
+  """
+   Get the number of token types that is owned by this account
+  """
+  tokenBalanceCount: Int!
+}
+
+"""
+Connection of transactions
+"""
+type AccountConnection {
+  """
+   The edges of this connection
+  """
+  edges: [AccountEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside AccountConnection
+"""
+type AccountEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Account
+}
+
+"""
+Connection of transactions
+"""
+type AccountTransferConnection {
+  """
+   The edges of this connection
+  """
+  edges: [AccountTransferEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges of AccountTransfersConnection
+"""
+type AccountTransferEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The transaction with the transfers
+  """
+  transaction: Transaction
+
+  """
+   Fungible token transfers inside this transaction
+  """
+  tokenTransfers: TokenTransferConnection
+
+  """
+   NFT transfers inside this transaction
+  """
+  nftTransfers: NFTTransferConnection
+}
+
+"""
+ Current staking epochs
+"""
+type ActiveStakeEpoch {
+  """
+   The start time of this epoch
+  """
+  start: Time!
+
+  """
+   Number of tokens to be paid this epoch
+  """
+  tokenPayout: String!
+
+  """
+   Total committed token
+  """
+  totalCommitted(type: StakingType, role: NodeRole): String!
+
+  """
+   Total tokens staked at the current epoch
+  """
+  totalStaked(type: StakingType, role: NodeRole): UFix64!
+
+  """
+   Total unstaking token
+  """
+  totalUnstaking(type: StakingType, role: NodeRole): String!
+
+  """
+   Total unstaking token
+  """
+  totalUnstaked(type: StakingType, role: NodeRole): String!
+
+  """
+   Total unstaking token
+  """
+  totalRewarded(type: StakingType, role: NodeRole): String!
+
+  """
+   Total unstaking token
+  """
+  totalRequestedUnstake(type: StakingType, role: NodeRole): String!
+
+  """
+   Number of delegators in the network
+  """
+  totalDelegators(role: NodeRole): Int!
+
+  """
+   Get the count of the nodes
+  """
+  nodesCount(role: NodeRole, active: Boolean, proposed: Boolean): Int!
+
+  """
+   APY for this epoch
+  """
+  apy: String!
+
+  """
+   Query node operators
+  """
+  nodeOperators(
+    first: Int
+    after: String
+    skip: Int
+    role: NodeRole
+    orderBy: String
+    active: Boolean
+    proposed: Boolean
+    ordering: Ordering
+  ): NodeOperatorConnection!
+}
+
+"""
+Affinity enumeration, used for querying records that are near the given value
+"""
+enum Affinity {
+  Equal
+  Less
+  More
+}
+
+"""
+Defines asset types
+"""
+enum AssetType {
+  FungibleToken
+  NonFungibleToken
+}
+
+"""
+Represents a block in the Flow blockchain
+"""
+type Block {
+  """
+   The height of the block
+  """
+  height: Int!
+
+  """
+   The timestamp of the block
+  """
+  time: Time!
+
+  """
+   Number of transactions in this block
+  """
+  transactionCount: Int!
+
+  """
+   Number of events in this block
+  """
+  eventCount: Int!
+}
+
+"""
+Connection of blocks
+"""
+type BlockConnection {
+  """
+   The edges of this connection
+  """
+  edges: [BlockEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside BlockConnection
+"""
+type BlockEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Block
+}
+
+"""
+ A transaction in Flow blockchain that is not yet executed or sealed
+"""
+type CheckTransactionResult {
+  """
+   The hash of the transaction
+  """
+  hash: ID!
+
+  """
+   The status code of this transaction
+  """
+  status: TransactionStatus!
+
+  """
+   Index of key used to sign this transaction
+  """
+  keyIndex: Int!
+
+  """
+   The sequence number (nonce) used for this transaction
+  """
+  sequenceNumber: Int!
+
+  """
+   Gas limit set for this transaction
+  """
+  gasLimit: Int!
+
+  """
+   The transaction code (in Cadence) used in this transaction
+  """
+  script: String!
+
+  """
+   The arguments used for this transaction
+  """
+  arguments: JSON!
+
+  """
+   The account that paid for this transaction
+  """
+  payer: Account!
+
+  """
+   The account that proposes this transaction
+  """
+  proposer: Account!
+
+  """
+   Accounts that authorizes this transaction
+  """
+  authorizers: [Account!]!
+
+  """
+   Block that is used as the reference block for this transaction
+  """
+  referenceBlock: Block!
+
+  """
+   The transaction itself if it is already executed
+  """
+  transaction: Transaction
+}
+
+"""
+ Represents a deployed contract on the Flow blockchain
+"""
+type Contract {
+  """
+   Fully-qualified identifier of this contract
+  """
+  id: ID!
+
+  """
+  If the contract is locked meaning that the account containing this contract has all of its keys removed
+  Therefore it's impossible to change the contract code
+  """
+  locked: Boolean!
+
+  """
+   True if the contract is already deleted
+  """
+  deleted: Boolean!
+
+  """
+   The contract type
+  """
+  type: ContractType!
+
+  """
+   The address of the account this contract is deployed onto
+  """
+  address: ID!
+
+  """
+   Name of this contract
+  """
+  identifier: String!
+
+  """
+   The Cadence code deployed to this contract
+  """
+  code: String!
+
+  """
+   The account where this contract is deployed onto
+  """
+  account: Account!
+
+  """
+   Get the token info of this contract if this contract follows the Flow's FungibleToken standard
+  """
+  token: Token
+
+  """
+   Query contract deployments for this contract
+  """
+  deployments(
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): TransactionConnection
+
+  """
+   Number of contract deployments
+  """
+  deploymentCount: Int!
+
+  """
+   Query transactions that interacts with this contract (that produces events)
+  """
+  interactions(
+    """
+    (Optional)
+    Filter to only transactions that emitted the given event type name from this contract
+    """
+    eventTypeName: ID
+
+    """
+     (Optional) Filter to transactions that is proposed, paid, or authorized by the given account address
+    """
+    from: ID
+
+    """
+     (Optional) If `from` is set, filter to transactions where the `from` account is acting as the given role
+    """
+    role: TransactionRole
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): TransactionConnection
+
+  """
+  Number of contract interactions.
+  Not that an contract interaction is defined as any transaction that has emitted at least one event from the contract.
+  """
+  interactionCount: Int!
+
+  """
+  Query the number of interactions this contract get within the given time as a time-series data.
+  Note that an contract interaction is defined as any transaction that has emitted at least one event from the contract.
+  """
+  interactionCountTimeSeries(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+
+  """
+  Query the number of unique accounts that has made any transaction that interacted with this contract.
+  Note that an account is considered as interacting with a contract when that account has either proposed, authorized, or paid a transaction that emits at least one event from the contract within the given time period.
+  """
+  uniqueUserCountTimeSeries(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+}
+
+"""
+Connection of contracts
+"""
+type ContractConnection {
+  """
+   The edges of this connection
+  """
+  edges: [ContractEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside contract connection
+"""
+type ContractEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Contract
+}
+
+"""
+ Contract classification
+"""
+enum ContractType {
+  """
+   General contract type
+  """
+  Default
+  FungibleToken
+  NonFungibleToken
+  Interface
+}
+
+"""
+ The domain name of an account
+"""
+type DomainName {
+  """
+   The name, not including the TLD
+  """
+  name: String!
+
+  """
+   The full name including TLD
+  """
+  fullName: String!
+
+  """
+   The provider this domain is using
+  """
+  provider: ID!
+}
+
+"""
+ Represents an event on the Flow blockchain
+"""
+type Event {
+  """
+   Event index of this event in the transaction
+  """
+  index: Int!
+
+  """
+   The field values of this event
+  """
+  fields: [JSON!]!
+
+  """
+   The time this event is recorded on the blockchain
+  """
+  time: Time!
+
+  """
+   The type of this event
+  """
+  type: EventType!
+
+  """
+   The transaction that contains this event
+  """
+  transaction: Transaction!
+
+  """
+   The block that contains this event
+  """
+  block: Block!
+}
+
+"""
+Connection of events
+"""
+type EventConnection {
+  """
+   The edges of this connection
+  """
+  edges: [EventEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside EvenConnection
+"""
+type EventEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Event
+}
+
+"""
+ Data types of an event field
+"""
+enum EventFieldDataType {
+  Unknown
+  UInt8
+  UInt16
+  UInt32
+  UInt64
+  UInt128
+  UInt256
+  Int8
+  Int16
+  Int32
+  Int64
+  Int128
+  Int256
+  Word8
+  Word16
+  Word32
+  Word64
+  Fix64
+  UFix64
+  Address
+  AnyStruct
+  AnyResource
+  String
+  Character
+}
+
+"""
+ Represents an event type on the Flow blockchain
+"""
+type EventType {
+  """
+   Fully-qualified name of the event type that includes the contract address and type
+  """
+  id: ID!
+
+  """
+   Name of the event
+  """
+  name: String!
+
+  """
+   Fields of this event type
+  """
+  fields: [EventTypeField!]!
+
+  """
+   The contract that holds this event type
+  """
+  contract: Contract!
+}
+
+"""
+ Represents the fields inside an event type
+"""
+type EventTypeField {
+  """
+   The type of this event field
+  """
+  type: String!
+
+  """
+   The field identifier of this event field
+  """
+  identifier: String!
+}
+
+"""
+ Contains information about the Flow token
+"""
+type FlowToken {
+  """
+   The current total supply of the Flow token
+  """
+  totalSupply: String!
+
+  """
+   The current circulating supply of the Flow token
+  """
+  circulatingSupply: String!
+}
+
+"""
+Any arbitrary data encoded as JSON
+"""
+scalar JSON
+
+enum Language {
+  English
+  Chinese
+}
+
+"""
+Describes an NFT listing in a marketplace
+"""
+type Listing {
+  """
+   The timestamp this listing is posted
+  """
+  time: Time!
+
+  """
+   The NFT that is being listed
+  """
+  nft: NFT!
+
+  """
+   The marketplace of the listing
+  """
+  marketplace: Marketplace!
+
+  """
+   The seller account
+  """
+  seller: Account!
+
+  """
+   The price of this listing
+  """
+  price: TokenAmount!
+
+  """
+   Wether or not this listing is still active
+  """
+  active: Boolean!
+
+  """
+   The transaction of this listing
+  """
+  transaction: Transaction!
+
+  """
+   The removal transaction
+  """
+  removal: Transaction!
+}
+
+type ListingConnection {
+  """
+   The edges of this connection
+  """
+  edges: [ListingEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside listings connection
+"""
+type ListingEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Listing
+}
+
+"""
+Marketplace definition
+"""
+type Marketplace {
+  """
+   Unique ID of the marketplace
+  """
+  id: ID!
+
+  """
+   The name of this marketplace
+  """
+  name(language: Language): String
+
+  """
+   Description for this marketplace
+  """
+  description(language: Language): String
+
+  """
+   The official website of this marketplace
+  """
+  websiteUrl: String
+
+  """
+   Query sale activity metric for this marketplace
+  """
+  saleActivity(since: Time!): Int
+
+  """
+   Query sale activity metric for this marketplace
+  """
+  saleVolume(since: Time!): Int
+
+  """
+   Query the number of unique traders
+  """
+  tradersCount(since: Time!): Int
+
+  """
+  Query listings from this marketplace
+  """
+  listings(
+    """
+     (Optional) Filter the results to the given NFT collections
+    """
+    nftCollectionIds: [ID!]
+
+    """
+     (Optional) The maximum number of records to get
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) Ordering of the results, available values: "timestamp" | "value"
+    """
+    orderBy: String
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Defaults to true. Filters only to active listings
+    """
+    active: Boolean
+  ): ListingConnection
+
+  """
+  Query sales from this marketplace
+  """
+  sales(
+    """
+     (Optional) Filter the results to the given NFT collections
+    """
+    nftCollectionIds: [ID!]
+
+    """
+     (Optional) The maximum number of records to get
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) Ordering of the results, available values: "timestamp" | "value"
+    """
+    orderBy: String
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter sales by this seller
+    """
+    seller: ID
+
+    """
+     (Optional) Filter sales by this buyer
+    """
+    buyer: ID
+  ): SaleConnection
+}
+
+"""
+Connection of listings
+"""
+type MarketplaceConnection {
+  """
+   The edges of this connection
+  """
+  edges: [MarketplaceEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside MarketplaceConnection
+"""
+type MarketplaceEdge {
+  cursor: String!
+
+  """
+   The value of this edge that is relevant with the original query. E.g. if you query marketplaces by users in the last 24h, then this value represents that
+  """
+  value: Int!
+  node: Marketplace
+}
+
+"""
+The root type for metric queries
+"""
+type Metrics {
+  """
+  Query historical NFT sales activity.
+  Activity is the number of sale event happens within the time period.
+  """
+  nftSalesActivity(
+    """
+     (Optional) Filter records since the specified time, supports up to hourly precision
+    """
+    since: Time!
+
+    """
+     (Optional) Resolution of the time-series data, defaults to daily
+    """
+    interval: Period
+
+    """
+     (Optional) Filter listings from the given marketplace
+    """
+    marketplaceId: ID
+
+    """
+     (Optional) Filter listings from the given NFT collection
+    """
+    nftCollectionId: ID
+
+    """
+     (Optional) Filter records until before the specified date, supports up to hourly precision
+    """
+    until: Time
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical NFT sales volume.
+  Volume is the total value (in USD) of the sales happening within a period of time.
+  If a sale is dealt in non-USD tokens (such as FLOW), the USD valuation of the said token will be used.
+  """
+  nftSalesVolume(
+    """
+     (Optional) Filter records since the specified time, supports up to hourly precision
+    """
+    since: Time!
+
+    """
+     (Optional) Resolution of the time-series data, defaults to daily
+    """
+    interval: Period
+
+    """
+     (Optional) Filter listings from the given marketplace
+    """
+    marketplaceId: ID
+
+    """
+     (Optional) Filter listings from the given NFT collection
+    """
+    nftCollectionId: ID
+
+    """
+     (Optional) Filter records until before the specified date, supports up to hourly precision
+    """
+    until: Time
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical NFT listings activity.
+  Activity is the number of listing event happens within the time period.
+  """
+  nftListingsActivity(
+    """
+     (Optional) Filter records since the specified time, supports up to hourly precision
+    """
+    since: Time!
+
+    """
+     (Optional) Resolution of the time-series data, defaults to daily
+    """
+    interval: Period
+
+    """
+     (Optional) Filter listings from the given marketplace
+    """
+    marketplaceId: ID
+
+    """
+     (Optional) Filter listings from the given NFT collection
+    """
+    nftCollectionId: ID
+
+    """
+     (Optional) Filter records until before the specified date, supports up to hourly precision
+    """
+    until: Time
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical number of unique NFT owners
+  """
+  nftOwners(
+    """
+     (Optional) Filter records since the specified time, supports up to hourly precision
+    """
+    since: Time!
+
+    """
+     (Optional) Resolution of the time-series data, defaults to daily
+    """
+    interval: Period
+
+    """
+     (Optional) Filter records until before the specified date, supports up to hourly precision
+    """
+    until: Time
+
+    """
+     (Optional) Filter listings from the given NFT collection
+    """
+    nftCollectionId: ID
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical number of transactions related to NFT contracts
+  """
+  nftTransactions(
+    """
+     (Optional) Filter records since the specified time, supports up to hourly precision
+    """
+    since: Time!
+
+    """
+     (Optional) Resolution of the time-series data, defaults to daily
+    """
+    interval: Period
+
+    """
+     (Optional) Filter records until before the specified date, supports up to hourly precision
+    """
+    until: Time
+
+    """
+     (Optional) Filter listings from the given NFT collection
+    """
+    nftCollectionId: ID
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical floor price of the specified NFT collection.
+  """
+  nftFloor(
+    """
+     (Optional) Filter records since the specified time, supports up to hourly precision
+    """
+    since: Time!
+
+    """
+     Filter listings from the given NFT collection
+    """
+    nftCollectionId: ID
+
+    """
+     (Optional) Resolution of the time-series data, defaults to daily
+    """
+    interval: Period
+
+    """
+     (Optional) Filter records until before the specified date, supports up to hourly precision
+    """
+    until: Time
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical number of unique marketplace users
+  """
+  nftMarketplaceUsers(
+    """
+     (Optional) Filter records since the specified time, supports up to hourly precision
+    """
+    since: Time!
+
+    """
+     (Optional) Resolution of the time-series data, defaults to daily
+    """
+    interval: Period
+
+    """
+     (Optional) Filter records until before the specified date, supports up to hourly precision
+    """
+    until: Time
+
+    """
+     (Optional) Filter listings from the given marketplace
+    """
+    marketplaceId: ID
+
+    """
+     (Optional) Filter listings from the given NFT collection
+    """
+    nftCollectionId: ID
+  ): [TimeSeriesData!]!
+}
+
+"""
+NFT definition
+"""
+type NFT {
+  """
+   The contract that defines the NFT
+  """
+  contract: Contract!
+
+  """
+   The NFT ID
+  """
+  nftId: ID!
+
+  """
+   The current owner of the NFT
+  """
+  owner: Account!
+
+  """
+   Historical transfers of this NFT
+  """
+  transfers(first: Int, after: String): NFTTransferConnection!
+}
+
+"""
+NFT collection definition
+"""
+type NFTCollection {
+  """
+   ID of this NFT collection
+  """
+  id: ID!
+
+  """
+   The name of this NFT collection
+  """
+  name(language: Language): String
+
+  """
+   A short description of this NFT collection
+  """
+  description(language: Language): String
+
+  """
+   The website of this NFT collection
+  """
+  website: String
+
+  """
+   The list of categories this collection is under
+  """
+  categories: [ProjectCategory!]!
+
+  """
+   The supply of this NFT collection
+  """
+  supply: String
+
+  """
+   Get the currently active listing at floor price
+  """
+  floor: Listing
+
+  """
+   The floor cap in USD (market capitalization calculated by multiplying floor price with the supply)
+  """
+  floorCap: Float
+
+  """
+   The smart contract of this NFT collection
+  """
+  contract: Contract!
+
+  """
+   Query sale activity metric for this marketplace
+  """
+  saleActivity(
+    """
+     Filter records from the specified time
+    """
+    since: Time!
+
+    """
+     (Optional) Filter listings from the given marketplace ID
+    """
+    marketplaceId: String
+  ): Int
+
+  """
+   Query sale activity metric for this marketplace
+  """
+  saleVolume(
+    """
+     Filter records from the specified time
+    """
+    since: Time!
+
+    """
+     (Optional) Filter listings from the given marketplace ID
+    """
+    marketplaceId: String
+  ): Int
+
+  """
+   Query the number of unique traders
+  """
+  tradersCount(
+    """
+     Filter records from the specified time
+    """
+    since: Time!
+
+    """
+     (Optional) Filter listings from the given marketplace ID
+    """
+    marketplaceId: String
+  ): Int
+
+  """
+   Query the holders of this NFT collection
+  """
+  holders(
+    """
+     (Optional) The maximum number of records to get
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) Ordering of the results, available values: "count" | "timestamp"
+    """
+    orderBy: String
+  ): NFTCollectionHolderConnection
+
+  """
+   Query the listings of NFTs inside this collection
+  """
+  listings(
+    """
+     (Optional) The maximum number of records to get
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) Ordering of the results, available values: "timestamp" | "value"
+    """
+    orderBy: String
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Defaults to true. Filters only to active listings
+    """
+    active: Boolean
+
+    """
+     (Optional) Filter listings from the given marketplace ID
+    """
+    marketplaceId: ID
+  ): ListingConnection
+
+  """
+   Query the sales of NFTs inside this collection
+  """
+  sales(
+    """
+     (Optional) The maximum number of records to get
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) Ordering of the results, available values: "timestamp" | "value"
+    """
+    orderBy: String
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter sales from the given marketplace ID
+    """
+    marketplaceId: ID
+  ): SaleConnection
+
+  """
+   Transfers of NFTs in this collection
+  """
+  transfers(
+    """
+     (Optional) Filter to only transfers of the given NFT ID
+    """
+    nftId: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the sender
+    """
+    from: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the receiver
+    """
+    to: ID
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): NFTTransferConnection!
+}
+
+type NFTCollectionConnection {
+  """
+   The edges of this connection
+  """
+  edges: [NFTCollectionEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges for NFTCollectionConnection
+"""
+type NFTCollectionEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: NFTCollection
+}
+
+"""
+Connection of NFT collection holders
+"""
+type NFTCollectionHolderConnection {
+  """
+   The edges of this connection
+  """
+  edges: [NFTCollectionHolderEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+NFT collection holder definition
+"""
+type NFTCollectionHolderEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Account
+
+  """
+   The NFTs in this holder account
+  """
+  nfts(
+    """
+     (Optional) The maximum number of records to get
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) Ordering of the results, available values: "serial" | "value"
+    """
+    orderBy: String
+  ): NFTConnection!
+}
+
+"""
+Connection of NFTs
+"""
+type NFTConnection {
+  """
+   The edges of this connection
+  """
+  edges: [NFTEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges for NFTConnection
+"""
+type NFTEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: NFT
+}
+
+"""
+A transfer of NFT event
+"""
+type NFTTransfer {
+  """
+   The NFT that is being transferred
+  """
+  nft: NFT!
+
+  """
+   The transaction of this transfer
+  """
+  transaction: Transaction!
+
+  """
+   The sender, could be null
+  """
+  from: Account
+
+  """
+   The destination, could be null
+  """
+  to: Account
+}
+
+"""
+Connection of NFTs
+"""
+type NFTTransferConnection {
+  """
+   The edges of this connection
+  """
+  edges: [NFTTransferEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges for NFTTransferConnection
+"""
+type NFTTransferEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: NFTTransfer
+}
+
+"""
+Network definition
+"""
+type Network {
+  id: String!
+}
+
+"""
+ Node operator is a registered node operator in Flow blockchain
+"""
+type NodeOperator {
+  """
+   ID of the operator
+  """
+  id: ID!
+
+  """
+   Whether if this node is currently staking
+  """
+  active: Boolean!
+
+  """
+   Has this node prepared for the next epoch?
+  """
+  proposed: Boolean!
+
+  """
+   Name of the node operator
+  """
+  name: String
+
+  """
+   The role of the node
+  """
+  role: NodeRole!
+
+  """
+   Networking address
+  """
+  networkingAddress: String!
+
+  """
+   Networking key
+  """
+  networkingKey: String!
+
+  """
+   Staking key
+  """
+  stakingKey: String!
+
+  """
+   Amount staked
+  """
+  tokensStaked: String!
+
+  """
+   Amount delegated
+  """
+  tokensDelegated: String!
+
+  """
+   Total tokens staked
+  """
+  totalTokensStaked: String!
+
+  """
+   Total token committed
+  """
+  tokensCommitted: String!
+
+  """
+   Total tokens to be unstaked
+  """
+  tokensUnstaking: String!
+
+  """
+   Networking address
+  """
+  tokensUnstaked: String!
+
+  """
+   Networking address
+  """
+  tokensRewarded: String!
+
+  """
+   Networking address
+  """
+  tokensRequestedToUnstake: String!
+
+  """
+   The delegator ID counter
+  """
+  delegatorCounter: Int!
+
+  """
+   Initial weight for idk
+  """
+  initialWeight: Int!
+
+  """
+   The delegator count
+  """
+  delegatorCount: Int!
+}
+
+"""
+Connection of NodeOperators
+"""
+type NodeOperatorConnection {
+  """
+   The edges of this connection
+  """
+  edges: [NodeOperatorEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside NodeOperatorConnection
+"""
+type NodeOperatorEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: NodeOperator
+}
+
+"""
+ Type of nodes in the Flow blockchain protocol
+"""
+enum NodeRole {
+  Collection
+  Consensus
+  Execution
+  Verification
+  Access
+}
+
+"""
+Query result ordering direction
+"""
+enum Ordering {
+  Ascending
+  Descending
+}
+
+"""
+Describes the page information inside a data connection, as required by Relay server specification standard
+"""
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String!
+}
+
+"""
+A particular period of time
+"""
+enum Period {
+  Hourly
+  Daily
+  Weekly
+  Monthly
+  Yearly
+  AllTime
+}
+
+"""
+Project category definition
+"""
+type ProjectCategory {
+  """
+   ID of this project category
+  """
+  id: ID!
+
+  """
+   Name of this project category
+  """
+  name(language: Language): String
+}
+
+"""
+The root query type
+"""
+type Query {
+  network: Network!
+
+  """
+  Get a sealed transaction by ID (hash)
+  """
+  transaction(id: ID!): Transaction
+
+  """
+  Check a transaction by ID (hash), it is much more recommended to use `transaction` instead if the transaction is sealed.
+  Note that we only index events from sealed transactions.
+  """
+  checkTransaction(id: ID!): CheckTransactionResult
+
+  """
+  Get an account by ID (address)
+  """
+  account(id: ID!): Account
+
+  """
+  Get a contract transaction by ID (<address>.<identifier>)
+  """
+  contract(id: ID!): Contract
+
+  """
+  Get an account by domain
+  Currently supports .find and .fn TLDs
+  """
+  accountByDomain(domain: ID!): Account
+
+  """
+  Get an event type definition by its ID
+  Uses fully qualified event type ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME].[EVENT_NAME]
+  Flow system events uses this special format: flow.[EVENT_NAME]
+  """
+  eventType(id: ID!): EventType
+
+  """
+  Query blocks with the given parameters
+  """
+  blocks(
+    """
+     The maximum number of records to get
+    """
+    first: Int!
+  ): BlockConnection
+
+  """
+  Query transactions with the given parameters
+  """
+  transactions(
+    """
+     The maximum number of records to get
+    """
+    first: Int!
+  ): TransactionConnection
+
+  """
+  Query events with the given parameters
+  """
+  events(
+    """
+    (Optional)
+    Filter by the event type ID
+    Fully qualified event type ID format is required: A.[CONTRACT_ADDRESS].[CONTRACT_NAME].[EVENT_NAME]
+    Flow system events uses this special format: flow.[EVENT_NAME]
+    """
+    typeId: String
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): EventConnection
+
+  """
+  Query the number of blocks between the given time-range
+  """
+  blockCount(
+    """
+    (Optional) Aggregate data since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Aggregate data until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+  ): Int!
+
+  """
+  Query the number of transactions between the given time-range
+  """
+  transactionCount(
+    """
+    (Optional) Aggregate data since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Aggregate data until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+  ): Int!
+
+  """
+  Query the number of events between the given time-range
+  """
+  eventCount(
+    """
+     (Optional) Filter the type of the event
+    """
+    typeId: ID
+
+    """
+    (Optional) Aggregate data since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Aggregate data until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+  ): Int!
+
+  """
+  Query historical blocks count time-series data
+  """
+  blockCountTimeSeries(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical transaction count time-series data
+  """
+  transactionCountTimeSeries(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+
+  """
+  Query historical event count time-series data
+  """
+  eventCountTimeSeries(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+     (Optional) Filter the type of the event
+    """
+    typeId: ID
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+
+  """
+  Query the number of created accounts within the given time as a time-series data
+  """
+  accountCreationCountTimeSeries(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+
+  """
+  Query the number of active accounts within the given time as a time-series data.
+  Please note that an account is considered as active only when that account has either proposed, authorized, or paid for a transaction within the given time-period.
+  Receiving a token or NFT does not mark an account as active.
+  """
+  activeAccountCountTimeSeries(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+
+  """
+  Get fungible token info
+  """
+  token(id: ID!): Token
+
+  """
+  Get NFT info from its contract ID and NFT ID
+  """
+  nft(
+    """
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID!
+
+    """
+    The NFT ID in string format.
+    """
+    nftId: ID!
+  ): NFT
+
+  """
+  Query token transfers
+  """
+  tokenTransfers(
+    """
+    (Optional) Filter to only transfers of the given token contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+
+    """
+     (Optional) Filter to only transfers of the given type
+    """
+    type: TransferType
+
+    """
+     (Optional) Filter to only transfers that is related with the given account
+    """
+    accountId: ID
+
+    """
+    (Optional) Filter to only transfers where one of the counterparties is the given account.
+    Requires the `accountId` filter to be set.
+    """
+    counterpartyId: ID
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): TokenTransferConnection!
+
+  """
+  Query NFT transfers
+  """
+  nftTransfers(
+    """
+    (Optional) Filter to only transfers of the given NFT contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+
+    """
+     (Optional) Filter to only transfers of the given NFT ID. The `contractId` filter is required for this filter to be used.
+    """
+    nftId: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the sender or the receiver
+    """
+    accountId: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the sender
+    """
+    from: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the receiver
+    """
+    to: ID
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): NFTTransferConnection!
+
+  """
+  Get the token balance of an account
+  """
+  tokenBalance(
+    """
+    The contract ID of the token
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID!
+
+    """
+     The account
+    """
+    accountId: ID!
+  ): TokenAmount
+
+  """
+   Get staking epoch data
+  """
+  stakeEpochs(from: Int, to: Int): [StakeEpoch!]!
+
+  """
+   Get the current active epoch
+  """
+  activeStakeEpoch: ActiveStakeEpoch!
+
+  """
+   Query node operators
+  """
+  nodeOperators(
+    first: Int
+    after: String
+    skip: Int
+    role: NodeRole
+    orderBy: String
+    active: Boolean
+    proposed: Boolean
+  ): NodeOperatorConnection!
+}
+
+"""
+NFT Sale event definition
+"""
+type Sale {
+  """
+   The timestamp of the sale
+  """
+  time: Time!
+
+  """
+   The NFT that is being sold
+  """
+  nft: NFT!
+
+  """
+   The marketplace of the listing
+  """
+  marketplace: Marketplace!
+
+  """
+   The buyer account
+  """
+  buyer: Account!
+
+  """
+   The seller account
+  """
+  seller: Account!
+
+  """
+   The price of this sale
+  """
+  price: TokenAmount!
+
+  """
+   The transaction of this sale
+  """
+  transaction: Transaction!
+
+  """
+   The listing of this sale on a marketplace, if this is null that means this is a first-party sale / drop
+  """
+  listing: Listing
+}
+
+"""
+Connection of sales
+"""
+type SaleConnection {
+  """
+   The edges of this connection
+  """
+  edges: [SaleEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside sales connection
+"""
+type SaleEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Sale
+}
+
+"""
+ Past epoch records
+"""
+type StakeEpoch {
+  index: Int!
+
+  """
+   The start time of this epoch
+  """
+  start: Time!
+
+  """
+   Amount of tokens staked
+  """
+  totalStaked: String!
+
+  """
+   Amount of tokens rewarded
+  """
+  totalRewarded: String!
+}
+
+"""
+ Type of staking
+"""
+enum StakingType {
+  Node
+  Delegate
+}
+
+"""
+Root type for subscriptions
+"""
+type Subscription {
+  """
+  Subscribe to new blocks
+  """
+  latestBlock: Block!
+
+  """
+  Subscribe to new transactions
+  """
+  latestTransaction: Transaction!
+
+  """
+  The latest height on the Flow blockchain
+  """
+  latestHeight: Int!
+
+  """
+  Subscribe to the transaction counter
+  """
+  transactionCount: Int!
+
+  """
+  Subscribe to the account counter
+  """
+  accountCount: Int!
+
+  """
+  Subscribe to the contract counter
+  """
+  contractCount: Int!
+}
+
+"""
+A point in time with precision up to seconds
+"""
+scalar Time
+
+"""
+Time series data. Not that zero values won't be included in the results. The client is responsible for filling up the empty values.
+"""
+type TimeSeriesData {
+  time: String!
+  value: Float!
+}
+
+"""
+A fungible token on the Flow blockchain
+"""
+type Token {
+  """
+   The ID of the token, identical with the contract ID of the token
+  """
+  id: String!
+
+  """
+   The name of this token
+  """
+  name(language: Language): String
+
+  """
+   The description of this token
+  """
+  description(language: Language): String
+
+  """
+   The ticker symbol used for this token
+  """
+  ticker: String
+
+  """
+   The current price of this token against USD
+  """
+  price: Float
+
+  """
+   The contract of this token
+  """
+  contract: Contract!
+
+  """
+   The total supply of the token
+  """
+  totalSupply: String!
+
+  """
+   Query the transfers of this token
+  """
+  transfers(
+    """
+     (Optional) Filter to only transfers that is related with the given account
+    """
+    accountId: ID
+
+    """
+     (Optional) Filter to only transfers of the given type
+    """
+    type: TransferType
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) The ordering of the results
+    """
+    ordering: Ordering
+
+    """
+     (Optional) Filter records since the specified time
+    """
+    since: Time
+
+    """
+     (Optional) Filter records until before the specified time
+    """
+    until: Time
+
+    """
+     (Optional) Filter records since the specified height
+    """
+    heightFrom: Int
+
+    """
+     (Optional) Filter records until before the specified height
+    """
+    heightTo: Int
+  ): TokenTransferConnection!
+
+  """
+   Query the holders of this token, ordered by the number of tokens
+  """
+  holders(
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+  ): TokenBalanceConnection!
+
+  """
+   Get the number of holders of this token
+  """
+  transferCount: Int!
+
+  """
+   Get the number of holders of this token
+  """
+  holderCount: Int!
+
+  """
+   Query the volume of this token within the time period
+  """
+  volume(
+    """
+    Filter records since the specified time, supports up to hourly precision.
+    This filter is INCLUSIVE
+    """
+    since: Time!
+
+    """
+    (Optional) Filter records until before the specified date, supports up to hourly precision.
+    This filter is EXCLUSIVE
+    """
+    until: Time
+
+    """
+     (Optional) Resolution of the time-series data, defaults to Daily
+    """
+    interval: Period
+  ): [TimeSeriesData!]!
+}
+
+type TokenAmount {
+  """
+   (Query) The definition of the fungible token
+  """
+  token: Token!
+
+  """
+  The amount of the transferred tokens as a fixed-point value.
+  JSON does not support fixed point values or big integers, therefore this value is
+  encoded as a string with 8 decimal points.
+
+  For example, 123456789 represents the value 1.23456789
+  """
+  value: UFix64!
+
+  """
+  Get the USD valuation of this token amount.
+  If this is null that means we are not tracking the value of this token.
+  It is possible to get the historical value by providing `at`
+  """
+  usdValue(at: Time): Float
+}
+
+"""
+Connection of token amounts
+"""
+type TokenAmountConnection {
+  """
+   The edges of this connection
+  """
+  edges: [TokenAmountEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside TokenAmountConnection
+"""
+type TokenAmountEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: TokenAmount
+}
+
+"""
+The token balance of an account
+"""
+type TokenBalance {
+  """
+  The account with this balance
+  """
+  account: Account!
+
+  """
+  The token amount
+  """
+  amount: TokenAmount!
+}
+
+"""
+Connection of account balances
+"""
+type TokenBalanceConnection {
+  """
+   The edges of this connection
+  """
+  edges: [TokenBalanceEdge!]!
+
+  """
+   The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside TokenBalanceConnection
+"""
+type TokenBalanceEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: TokenBalance!
+}
+
+"""
+Ordering options for token balance queries
+"""
+enum TokenBalanceOrderKey {
+  """
+  Order by the USD valuation of the token.
+  If the USD value is not available, all tokens will have 0 USD value.
+  """
+  USDValue
+
+  """
+  Order by the token amount itself.
+  """
+  Amount
+
+  """
+  Order by the lexical ordering of the account ID
+  """
+  Account
+
+  """
+  Order by the lexical ordering of the contract ID
+  """
+  Contract
+}
+
+type TokenTransfer {
+  """
+  The transfer type
+  """
+  type: TransferType!
+
+  """
+  The amount of tokens transferred
+  """
+  amount: TokenAmount!
+
+  """
+  Get the transaction of this transfer
+  """
+  transaction: Transaction!
+
+  """
+  The related account in this transfer
+  """
+  account: Account!
+
+  """
+  A counterparty is the opposite side of a token transfer.
+
+  For example if this `Transfer` record shows a 100 FLOW token balance withdrawal from the account A, this field will return the
+  receiver of that 100 FLOW token.
+
+  There could be multiple counterparties in a transaction, e.g. if A distributes 10 FLOW to account B and 5 FLOW to account C in one transaction,
+  where in this case B and C are the counterparties of account A.
+
+  In the case of multiple counterparties, this field will only return the most significant counterparty by the token amount.
+  To get more details you would need to query the transfers from the transaction itself.
+  """
+  counterparty: Account
+
+  """
+  The number of counterparties
+  """
+  counterpartiesCount: Int!
+}
+
+"""
+Connection of token transfers
+"""
+type TokenTransferConnection {
+  """
+   The edges of this connection
+  """
+  edges: [TokenTransferEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside TokenTransferConnection
+"""
+type TokenTransferEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: TokenTransfer
+}
+
+"""
+ A sealed transaction in Flow blockchain
+"""
+type Transaction {
+  """
+   The hash of the transaction
+  """
+  hash: ID!
+
+  """
+   Block that contains this transaction
+  """
+  height: Int!
+
+  """
+   The index of this transaction within a block
+  """
+  index: Int!
+
+  """
+   The status code of this transaction
+  """
+  status: TransactionStatus!
+
+  """
+   Index of key used to sign this transaction
+  """
+  keyIndex: Int!
+
+  """
+   The sequence number (nonce) used for this transaction
+  """
+  sequenceNumber: Int!
+
+  """
+   Gas limit set for this transaction
+  """
+  gasLimit: Int!
+
+  """
+   The transaction code (in Cadence) used in this transaction
+  """
+  script: String!
+
+  """
+   The arguments used for this transaction
+  """
+  arguments: JSON!
+
+  """
+   Flags whether this transaction has errors
+  """
+  hasError: Boolean!
+
+  """
+   Errors produced by this transaction
+  """
+  error: String
+
+  """
+   Number of events in this transaction
+  """
+  eventCount: Int!
+
+  """
+   The time this transaction happened
+  """
+  time: Time!
+
+  """
+   The account that paid for this transaction
+  """
+  payer: Account!
+
+  """
+   The account that proposes this transaction
+  """
+  proposer: Account!
+
+  """
+   Accounts that authorizes this transaction
+  """
+  authorizers: [Account!]!
+
+  """
+   Block that contains this transaction
+  """
+  block: Block!
+
+  """
+   Block that is used as the reference block for this transaction
+  """
+  referenceBlock: Block!
+
+  """
+   Contracts that is referenced by this transaction
+  """
+  contractInteractions: [Contract!]!
+
+  """
+   The event types emitted by this transaction
+  """
+  eventTypes(contractIds: [ID!]): [EventType!]!
+
+  """
+   Query the events produced by this transaction
+  """
+  events(
+    """
+    (Optional) Filter to events with the given type ID. Uses fully-qualified.
+    Fully qualified event type ID format is required: A.[CONTRACT_ADDRESS].[CONTRACT_NAME].[EVENT_NAME]
+    Flow system events uses this special format: flow.[EVENT_NAME]
+    """
+    typeId: ID
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+  ): EventConnection!
+
+  """
+   Query the token transfers in this transaction
+  """
+  tokenTransfers(
+    """
+     (Optional) Filter to only transfers that is related with the given account
+    """
+    accountId: ID
+
+    """
+    (Optional) Filter to only transfers of the given token contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+
+    """
+     (Optional) Filter to only transfers of the given type
+    """
+    type: TransferType
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+  ): TokenTransferConnection!
+
+  """
+   Query the NFT transfers in this transaction
+  """
+  nftTransfers(
+    """
+    (Optional) Filter to only transfers of the given token contract ID.
+    Uses fully-qualified contract ID format: A.[CONTRACT_ADDRESS].[CONTRACT_NAME]
+    """
+    contractId: ID
+
+    """
+     (Optional) Filter to only transfers of the given NFT ID. The `contractId` filter is required for this filter to be used.
+    """
+    nftId: ID
+
+    """
+     (Optional) The maximum number of records to get, defaults to 10
+    """
+    first: Int
+
+    """
+     (Optional) The end cursor for pagination
+    """
+    after: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the sender
+    """
+    from: ID
+
+    """
+     (Optional) Filter to only NFT transfers where the given account is the receiver
+    """
+    to: ID
+  ): NFTTransferConnection!
+}
+
+"""
+Connection of transactions
+"""
+type TransactionConnection {
+  """
+   The edges of this connection
+  """
+  edges: [TransactionEdge!]!
+
+  """
+    The page info
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+Edges inside TransactionConnection
+"""
+type TransactionEdge {
+  """
+   The cursor of the edge
+  """
+  cursor: String!
+
+  """
+   The payload of the edge
+  """
+  node: Transaction
+}
+
+"""
+ Transaction roles
+"""
+enum TransactionRole {
+  Authorizer
+  Proposer
+  Payer
+}
+
+"""
+ Transaction statuses
+"""
+enum TransactionStatus {
+  Unknown
+  Pending
+  Finalized
+  Executed
+  Sealed
+  Expired
+}
+
+"""
+ Represents transfer a type
+"""
+enum TransferType {
+  Deposit
+  Withdraw
+}
+
+"""
+64-bit Fixed Point Value
+
+JSON does not support fixed point values or big integers, therefore this value is
+encoded as a string with 8 decimal points.
+
+For example, 123456789 represents the value 1.23456789
+"""
+scalar UFix64
