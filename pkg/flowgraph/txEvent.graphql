@@ -1,0 +1,22 @@
+query TransactionEvents($txID: ID!, $after:ID) {
+  transaction(id: $txID) {
+    events(first:50, after:$after) {
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+      edges {
+        node {
+          fields
+          type {
+           id
+            fields {
+              identifier
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

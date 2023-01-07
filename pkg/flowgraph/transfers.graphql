@@ -1,0 +1,75 @@
+query AccountTransfers($accountId: ID!, $since: Time!, $after:ID) {
+  account(id: $accountId) {
+    transferTransactions (
+      first: 50
+      ordering: Ascending
+      since: $since 
+			after:$after
+    ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        transaction {
+          hash
+          time
+          script
+          arguments
+				  events(first:50) {
+						pageInfo {
+							hasNextPage
+						}
+            edges {
+              node {
+                fields
+                type {
+                 id
+                  fields {
+                    identifier
+                  }
+                }
+              }
+            }
+          }
+        }
+        nftTransfers {
+          edges {
+            node {
+              nft {
+               nftId 
+               contract {
+                 id
+               }
+              }
+              from {
+                address
+              }
+              to {
+                address
+              }
+             
+            }
+          }
+        }
+        tokenTransfers {
+          edges {
+            node {
+              type 
+              amount {
+                token {
+                  id
+                }
+                value
+              }
+              counterparty {
+                address
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
