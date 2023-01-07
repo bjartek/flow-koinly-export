@@ -6,7 +6,7 @@ import (
 
 	"github.com/araddon/dateparse"
 	"github.com/bjartek/flow-koinly-export/pkg/flowgraph"
-	"github.com/sanity-io/litter"
+	"github.com/bjartek/flow-koinly-export/pkg/koinly"
 )
 
 func main() {
@@ -20,11 +20,24 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(t)
 	result, err := flowgraph.GetAccountTransfers(ctx, accountId, t)
 	if err != nil {
 		panic(err)
 	}
 
-	litter.Dump(result)
+	entires := []koinly.Event{}
+	for _, ev := range result {
+		entry, err := koinly.Convert(accountId, ev)
+		if err != nil {
+			panic(err)
+		}
+		entires = append(entires, entry...)
+	}
+
+	fmt.Println("=================")
+
+	err = koinly.Marshal(entires)
+	if err != nil {
+		panic(err)
+	}
 }

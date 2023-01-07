@@ -2,7 +2,8 @@
 # https://github.com/Khan/genqlient/blob/main/docs/genqlient.yaml
 schema: schema.graphql
 operations:
-- genqlient.graphql
+- transfers.graphql
+- txEvent.graphql
 generated: flowgraph.go
 package: flowgraph
 bindings:

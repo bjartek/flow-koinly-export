@@ -40,6 +40,41 @@ func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.wrapped.RoundTrip(req)
 }
 
+func GetEvents(ctx context.Context, hash string) ([]Event, error) {
+
+	client := NewFlowgraphClientFromEnv()
+
+	resp, err := TransactionEventsFirst(ctx, client, hash)
+	if err != nil {
+		return nil, err
+	}
+	root := resp.Transaction.Events
+	nodes := lo.Map(root.Edges, TransactionEventsTransactionEventsEventConnectionEdgesEventEdge.Convert)
+
+	if !root.PageInfo.HasNextPage {
+		return nodes, nil
+	}
+
+	after := root.PageInfo.EndCursor
+	for {
+		fmt.Print(".")
+		resp, err = TransactionEvents(ctx, client, hash, after)
+		if err != nil {
+			return nil, err
+		}
+
+		root := resp.Transaction.Events
+		eventNodes := lo.Map(root.Edges, TransactionEventsTransactionEventsEventConnectionEdgesEventEdge.Convert)
+		nodes = append(nodes, eventNodes...)
+
+		if !root.PageInfo.HasNextPage {
+			return nodes, nil
+		}
+
+		after = root.PageInfo.EndCursor
+	}
+}
+
 func GetAccountTransfers(ctx context.Context, accountId string, since time.Time) ([]Entry, error) {
 	client := NewFlowgraphClientFromEnv()
 

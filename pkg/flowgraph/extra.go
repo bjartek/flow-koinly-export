@@ -37,6 +37,9 @@ query AccountTransfers ($accountId: ID!, $since: Time!) {
 					script
 					arguments
 					events(first: 50) {
+						pageInfo {
+							hasNextPage
+						}
 						edges {
 							node {
 								fields
@@ -132,6 +135,9 @@ query AccountTransfers ($accountId: ID!, $after: ID) {
 					script
 					arguments
 					events(first: 50) {
+						pageInfo {
+							hasNextPage
+						}
 						edges {
 							node {
 								fields
@@ -203,38 +209,19 @@ query AccountTransfers ($accountId: ID!, $after: ID) {
 	return &data, err
 }
 
-type Transaction struct {
-	Hash       string
-	Time       time.Time
-	Script     string
-	ScriptHash string
-	Events     []Event
-	Arguments  []string
-}
-
-type RawArgument struct {
-	Value interface{}
-	Type  string
-}
-
-func (self RawArgument) GetValue(_ int) string {
-	return fmt.Sprintf("%v", self.Value)
-
-}
-
-type Event struct {
-	Name   string
-	Fields map[string]interface{}
-}
-
-type Entry struct {
-	Transaction Transaction
-	NFT         []NFTTransfer
-	Tokens      []TokenTransfer
-}
-
 func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransaction) Convert() Transaction {
+
 	events := lo.Map(self.Events.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransactionEventsEventConnectionEdgesEventEdge.Convert)
+
+	//TODO: if this is pay rewards do not do this :P
+	//TODO: maybe even just here bake in that we only want certain events?
+	if self.Events.PageInfo.HasNextPage {
+		ev, err := GetEvents(context.Background(), self.Hash)
+		if err != nil {
+			panic(err)
+		}
+		events = ev
+	}
 
 	res, err := json.Marshal(self.Arguments)
 	if err != nil {
@@ -284,13 +271,6 @@ func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionE
 		Fields: fields,
 	}
 
-}
-
-type NFTTransfer struct {
-	From     string
-	To       string
-	Contract string
-	Id       string
 }
 
 func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge) Convert(_ int) NFTTransfer {
