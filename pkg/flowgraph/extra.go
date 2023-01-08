@@ -255,14 +255,27 @@ func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionE
 	subValuePointer, _ := gojsonpointer.NewJsonPointer("/value/value")
 	valuePointer, _ := gojsonpointer.NewJsonPointer("/value")
 
+	valuesLength := len(values)
 	fields := map[string]interface{}{}
 	for i, key := range keys {
-		optionalValue, _, _ := subValuePointer.Get(values[i])
-		value, _, _ := valuePointer.Get(values[i])
-		if optionalValue == nil {
+
+		if i >= valuesLength {
+			continue
+		}
+		value, _, err := valuePointer.Get(values[i])
+		if err != nil {
+			panic(err)
+		}
+
+		if value != nil {
 			fields[key] = value
 		} else {
-			fields[key] = optionalValue
+			optionalValue, _, err := subValuePointer.Get(values[i])
+			if err != nil {
+				fields[key] = nil
+			} else {
+				fields[key] = optionalValue
+			}
 		}
 	}
 

@@ -67,8 +67,12 @@ func (self TransactionEventsTransactionEventsEventConnectionEdgesEventEdge) Conv
 	subValuePointer, _ := gojsonpointer.NewJsonPointer("/value/value")
 	valuePointer, _ := gojsonpointer.NewJsonPointer("/value")
 
+	valuesLength := len(values)
 	fields := map[string]interface{}{}
 	for i, key := range keys {
+		if i >= valuesLength {
+			continue
+		}
 		optionalValue, _, _ := subValuePointer.Get(values[i])
 		value, _, _ := valuePointer.Get(values[i])
 		if optionalValue == nil {

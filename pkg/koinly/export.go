@@ -2,6 +2,7 @@ package koinly
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/gocarina/gocsv"
@@ -33,16 +34,21 @@ type Event struct { // Our example struct, you can use "-" to ignore a field
 	SentCurrency     string   `csv:"Sent Currency"`
 	ReceivedAmount   string   `csv:"Received Amount"`
 	ReceivedCurrency string   `csv:"Received Currency"`
+	FeeAmount        string   `csv:"Fee Amount"`
+	FeeCurrency      string   `csv:"Fee Currency"`
 	Label            string   `csv:"Label"`
 	Description      string   `csv:"Description"`
 	TxHash           string   `csv:"TxHash"`
 }
 
-func Marshal(events []Event) error {
+func Marshal(events []Event, fileName string) error {
 	csvContent, err := gocsv.MarshalString(&events) // Get all clients as CSV string
 	if err != nil {
 		return err
 	}
 	fmt.Println(csvContent)
-	return nil
+
+	bytes := []byte(csvContent)
+	err = os.WriteFile(fileName, bytes, 0644)
+	return err
 }

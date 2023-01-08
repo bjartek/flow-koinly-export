@@ -57,7 +57,6 @@ func GetEvents(ctx context.Context, hash string) ([]Event, error) {
 
 	after := root.PageInfo.EndCursor
 	for {
-		fmt.Print(".")
 		resp, err = TransactionEvents(ctx, client, hash, after)
 		if err != nil {
 			return nil, err
@@ -84,29 +83,26 @@ func GetAccountTransfers(ctx context.Context, accountId string, since time.Time)
 	}
 	root := resp.Account.TransferTransactions
 	nodes := lo.Map(root.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdge.Convert)
-	return nodes, nil
-	/*
+
+	if !root.PageInfo.HasNextPage {
+		return nodes, nil
+	}
+
+	after := root.PageInfo.EndCursor
+	for {
+		fmt.Print(".")
+		resp, err = AccountTransfersAfter(ctx, client, accountId, after)
+		if err != nil {
+			return nil, err
+		}
+		root = resp.Account.TransferTransactions
+		eventNodes := lo.Map(root.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdge.Convert)
+		nodes = append(nodes, eventNodes...)
 
 		if !root.PageInfo.HasNextPage {
 			return nodes, nil
 		}
 
-		after := root.PageInfo.EndCursor
-		for {
-			fmt.Print(".")
-			resp, err = AccountTransfersAfter(ctx, client, accountId, after)
-			if err != nil {
-				return nil, err
-			}
-			root = resp.Account.TransferTransactions
-			eventNodes := lo.Map(root.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdge.Convert)
-			nodes = append(nodes, eventNodes...)
-
-			if !root.PageInfo.HasNextPage {
-				return nodes, nil
-			}
-
-			after = root.PageInfo.EndCursor
-		}
-	*/
+		after = root.PageInfo.EndCursor
+	}
 }
