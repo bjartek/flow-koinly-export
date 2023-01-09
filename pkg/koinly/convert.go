@@ -39,6 +39,7 @@ The following labels are allowed for incoming transactions:
 const NameFindPack = "A.097bafa4e0b48eef.FindPack.NFT"
 const NameVersusArt = "A.d796ff17107bbff6.Art.NFT"
 const NameFlovatarNFT = "A.921ea449dffec68a.Flovatar.NFT"
+const NameBl0xPack = "A.7620acf6d7f2468a.Bl0xPack.NFT"
 
 //atm this just converts if there are FT involved or not
 func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
@@ -351,22 +352,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	/*
-		if scriptHash == "83ca36e3d8c492576e58540a4eb0fb321c1f56acb09b10bb3422527ed7e81e2c" {
-			//this is a starly airdrop.. lets see what we get here
-			litter.Dump(packs.Mappings)
-			litter.Dump(entry)
-			os.Exit(1)
-		}
-
-			if scriptHash == "a120159c824203e71c7478314209c87fb4c18039f011000e6683951d79119b12" {
-				//starly packs are _not_ on chain...
-				token := entry.Tokens[0]
-				packs.Add(entry.Transaction.Arguments[1], token.Amount, token.Token)
-				return nil, nil
-			}
-	*/
-
 	if scriptHash == "c10d71b54483f24bae20db5109a748f792622dcaf170d61f6f8dfd37503a3a46" {
 		//flovatar component market
 
@@ -410,12 +395,8 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			event.ReceivedCurrency = nftId
 
 		} else if token.Type == "Deposit" {
-			nftId, err := state.GetNFTID(NameVersusArt, id)
-
-			if err != nil {
-				nftId = "TODO"
-				//return nil, errors.Wrap(err, "versus buy")
-			}
+			//some versus is not there
+			nftId := state.AddNFTID(NameVersusArt, id)
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
 			event.SentAmount = "1"
@@ -448,6 +429,16 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				entries = append(entries, ev)
 			}
 		}
+		if len(entries) == 0 {
+
+			for _, nft := range entry.NFT {
+				ev := event
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = state.AddNFTID(NameVersusArt, nft.Id)
+				ev.Description = fmt.Sprintf("%s lookup drop to find price https://versus.acution/drops/%s ", ev.Description, entry.Transaction.Arguments[0])
+				entries = append(entries, ev)
+			}
+		}
 		return entries, nil
 	}
 
@@ -461,36 +452,101 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	if scriptHash == "c2080352d0b3a813a73f9d48b94e4371aef10a20416da310c0ecb3b69dc8acf8" {
-		//FindPack buy
+	/*
+		if scriptHash == "c2080352d0b3a813a73f9d48b94e4371aef10a20416da310c0ecb3b69dc8acf8" {
+			//FindPack buy
 
-		if numberOfFTTransfers == 0 {
-			//we got airdropped a pack so it is worth nothing for us, handle it in open pack
-			return nil, nil
-		}
-
-		token := entry.Tokens[0]
-		sumPerPack := token.Amount / float64(len(entry.NFT))
-
-		for i, nft := range entry.NFT {
-			ev := event
-
-			if i != 0 {
-				ev.FeeAmount = ""
-				ev.FeeCurrency = ""
+			if numberOfFTTransfers == 0 {
+				//we got airdropped a pack so it is worth nothing for us, handle it in open pack
+				return nil, nil
 			}
-			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-			ev.Label = "Trade"
-			ev.ReceivedAmount = "1"
-			ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
-			ev.SentAmount = fmt.Sprintf("%v", sumPerPack)
-			ev.SentCurrency = ConvertCurrency(token.Token)
-			state.AddPack(ev.ReceivedCurrency, sumPerPack, token.Token)
 
-			entries = append(entries, ev)
+			token := entry.Tokens[0]
+			sumPerPack := token.Amount / float64(len(entry.NFT))
+
+			for i, nft := range entry.NFT {
+				ev := event
+
+				if i != 0 {
+					ev.FeeAmount = ""
+					ev.FeeCurrency = ""
+				}
+				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+				ev.Label = "Trade"
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+				ev.SentAmount = fmt.Sprintf("%v", sumPerPack)
+				ev.SentCurrency = ConvertCurrency(token.Token)
+				state.AddPack(ev.ReceivedCurrency, sumPerPack, token.Token)
+
+				entries = append(entries, ev)
+			}
+			return entries, nil
+
+		}
+	*/
+
+	if scriptHash == "27c50fc75f5a8812748ed3cc39dacde12236012580e681c23bded52979defb5d" {
+		//Bl0xPack  redeem lots of duplication from below
+
+		//a map to hold all packs that where revealed to you in this tx
+		packMappings := map[string][]string{}
+
+		for _, ev := range entry.Transaction.Events {
+			if ev.Name != "A.097bafa4e0b48eef.Bl0xPack.PackReveal" {
+				continue
+			}
+			to, ok := ev.Fields["address"].(string)
+			if !ok {
+				continue
+			}
+
+			if to != address {
+				continue
+			}
+
+			packId, _ := ev.Fields["packId"].(string)
+			rewardId, _ := ev.Fields["rewardId"].(string)
+			rewardType, _ := ev.Fields["rewardType"].(string)
+			rewardNFT := state.AddNFTID(rewardType, rewardId)
+
+			packMappingId := state.AddNFTID(NameBl0xPack, packId)
+
+			packForId, ok := packMappings[packMappingId]
+			if !ok {
+				packForId = []string{}
+			}
+			packForId = append(packForId, rewardNFT)
+			packMappings[packMappingId] = packForId
+		}
+		//we now have a multimap of NFTX -> NFTX,NFTX where the first is an pack NFT and the others are reward NFTS
+
+		for packId, rewards := range packMappings {
+			packPurchase, ok := state.GetPack(packId)
+			if !ok {
+				for _, reward := range rewards {
+					ev := event
+					ev.Label = "airdrop"
+					ev.ReceivedAmount = "1"
+					ev.ReceivedCurrency = reward
+					entries = append(entries, ev)
+				}
+			} else {
+				pricePerReward := packPurchase.Amount / float64(len(rewards))
+
+				for _, reward := range rewards {
+					ev := event
+					ev.Label = "Swap"
+					ev.SentAmount = fmt.Sprintf("%f", pricePerReward)
+					ev.SentCurrency = ConvertCurrency(packPurchase.Currency)
+					ev.ReceivedAmount = "1"
+					ev.ReceivedCurrency = reward
+					entries = append(entries, ev)
+				}
+
+			}
 		}
 		return entries, nil
-
 	}
 
 	if scriptHash == "80719f6a41daeb27f9ac5d7f49ea02b4adb45b1ee34272cd42603e6ca06aaeb3" {
@@ -533,7 +589,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			if !ok {
 				for _, reward := range rewards {
 					ev := event
-					ev.Label = "Airdrop"
+					ev.Label = "airdrop"
 					ev.ReceivedAmount = "1"
 					ev.ReceivedCurrency = reward
 					entries = append(entries, ev)
@@ -599,10 +655,19 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev := event
 			ev.Label = "Trade"
 			if token.Type == "Withdraw" {
+				if i != 0 {
+					ev.FeeAmount = ""
+					ev.FeeCurrency = ""
+				}
 				ev.SentAmount = fmt.Sprintf("%v", eachSum)
 				ev.SentCurrency = ConvertCurrency(token.Token)
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+
+				//we buy bl0x packs so we add the pack price to the registry
+				if eventName == NameBl0xPack || eventName == NameFindPack {
+					state.Packs.Add(ev.ReceivedCurrency, eachSum, token.Token)
+				}
 
 			} else if token.Type == "Deposit" {
 				//we only pay the fee once
