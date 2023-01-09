@@ -1,0 +1,25 @@
+query TransactionTokens($txId: ID!, $after:ID) {
+  transaction(id: $txId) {
+     tokenTransfers(first:50, after:$after) {
+					pageInfo {
+						hasNextPage
+						endCursor
+					}
+          edges {
+            node {
+              type 
+              amount {
+                token {
+                  id
+                }
+                value
+              }
+              counterparty {
+                address
+              }
+            }
+          }
+      }
+   }
+}
+

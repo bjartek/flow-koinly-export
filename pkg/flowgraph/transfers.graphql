@@ -1,9 +1,8 @@
-query AccountTransfers($accountId: ID!, $since: Time!, $after:ID) {
+query AccountTransfers($accountId: ID!, $after:ID) {
   account(id: $accountId) {
     transferTransactions (
       first: 50
       ordering: Ascending
-      since: $since 
 			after:$after
     ) {
       pageInfo {
@@ -34,6 +33,10 @@ query AccountTransfers($accountId: ID!, $since: Time!, $after:ID) {
           }
         }
         nftTransfers {
+				  pageInfo{
+						hasNextPage
+						endCursor
+					}
           edges {
             node {
               nft {
@@ -53,6 +56,10 @@ query AccountTransfers($accountId: ID!, $since: Time!, $after:ID) {
           }
         }
         tokenTransfers {
+					 pageInfo{
+						hasNextPage
+						endCursor
+					}
           edges {
             node {
               type 

@@ -4,6 +4,8 @@ schema: schema.graphql
 operations:
 - transfers.graphql
 - txEvent.graphql
+- txTokens.graphql
+- txNFT.graphql
 generated: flowgraph.go
 package: flowgraph
 bindings:

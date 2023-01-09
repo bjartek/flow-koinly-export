@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/bjartek/flow-koinly-export/pkg/core"
@@ -15,18 +14,17 @@ import (
 	"github.com/xeipuuv/gojsonpointer"
 )
 
-func AccountTransfersSince(
+func AccountTransfersFirst(
 	ctx context.Context,
 	client graphql.Client,
 	accountId string,
-	since time.Time,
 ) (*AccountTransfersResponse, error) {
 	req := &graphql.Request{
 		OpName: "AccountTransfers",
 		Query: `
-query AccountTransfers ($accountId: ID!, $since: Time!) {
+query AccountTransfers ($accountId: ID!) {
 	account(id: $accountId) {
-		transferTransactions(first: 50, ordering: Ascending, since: $since) {
+		transferTransactions(first: 50, ordering: Ascending) {
 			pageInfo {
 				hasNextPage
 				endCursor
@@ -95,105 +93,6 @@ query AccountTransfers ($accountId: ID!, $since: Time!) {
 `,
 		Variables: &__AccountTransfersInput{
 			AccountId: accountId,
-			Since:     since,
-			After:     "",
-		},
-	}
-	var err error
-
-	var data AccountTransfersResponse
-	resp := &graphql.Response{Data: &data}
-
-	err = client.MakeRequest(
-		ctx,
-		req,
-		resp,
-	)
-
-	return &data, err
-}
-
-func AccountTransfersAfter(
-	ctx context.Context,
-	client graphql.Client,
-	accountId string,
-	after string,
-) (*AccountTransfersResponse, error) {
-	req := &graphql.Request{
-		OpName: "AccountTransfers",
-		Query: `
-query AccountTransfers ($accountId: ID!, $after: ID) {
-	account(id: $accountId) {
-		transferTransactions(first: 50, ordering: Ascending, after: $after) {
-			pageInfo {
-				hasNextPage
-				endCursor
-			}
-			edges {
-				transaction {
-					hash
-					time
-					script
-					arguments
-					events(first: 50) {
-						pageInfo {
-							hasNextPage
-						}
-						edges {
-							node {
-								fields
-								type {
-									id
-									fields {
-										identifier
-									}
-								}
-							}
-						}
-					}
-				}
-				nftTransfers {
-					edges {
-						node {
-							nft {
-								nftId
-								contract {
-									id
-								}
-							}
-							from {
-								address
-							}
-							to {
-								address
-							}
-						}
-					}
-				}
-				tokenTransfers {
-					edges {
-						node {
-							type
-							amount {
-								token {
-									id
-								}
-								value
-							}
-							counterparty {
-								address
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-`,
-		Variables: &__AccountTransfersInput{
-			AccountId: accountId,
-			After:     after,
 		},
 	}
 	var err error
@@ -284,11 +183,9 @@ func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionE
 		Name:   self.Node.Type.Id,
 		Fields: fields,
 	}
-
 }
 
 func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge) Convert(_ int) core.NFTTransfer {
-
 	return core.NFTTransfer{
 		From:     self.Node.From.Address,
 		To:       self.Node.To.Address,
@@ -319,10 +216,31 @@ func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionE
 		Counterparty: self.Node.Counterparty.Address,
 	}
 }
+
 func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdge) Convert(_ int) core.Entry {
+	tx := self.Transaction.Convert()
+	nfts := lo.Map(self.NftTransfers.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge.Convert)
+	transfer := lo.Map(self.TokenTransfers.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge.Convert)
+
+	var err error
+	//if we have more then 10 transfers we have to refetch everyone from here, we cannot use the first and then append since it is not sorted the same!
+	if self.NftTransfers.PageInfo.HasNextPage {
+		nfts, err = GetTxNFTS(context.Background(), tx.Hash)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if self.TokenTransfers.PageInfo.HasNextPage {
+		transfer, err = GetTxTransfers(context.Background(), tx.Hash)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	return core.Entry{
-		Transaction: self.Transaction.Convert(),
-		NFT:         lo.Map(self.NftTransfers.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge.Convert),
-		Tokens:      lo.Map(self.TokenTransfers.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge.Convert),
+		Transaction: tx,
+		NFT:         nfts,
+		Tokens:      transfer,
 	}
 }

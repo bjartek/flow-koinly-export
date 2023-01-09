@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/samber/lo"
@@ -44,7 +46,7 @@ type Transaction struct {
 type State struct {
 	Packs           *Packs
 	CompositeStatus *CompositeStatus
-	NFTMappings     NFTIDGenerator
+	NFTMappings     *NFTId
 	RawEntries      []Entry
 }
 
@@ -52,7 +54,7 @@ func (self *State) HasNFTID(contract, id string) bool {
 	return self.NFTMappings.Contains(contract, id)
 }
 
-func (self *State) GetNFTID(contract, id string) string {
+func (self *State) GetNFTID(contract, id string) (string, error) {
 	return self.NFTMappings.Get(contract, id)
 }
 func (self *State) AddNFTID(contract, id string) string {
@@ -77,8 +79,12 @@ func (self *State) GetCompositeComponent(id string) []string {
 	return self.CompositeStatus.Component(id)
 }
 
-func (self *State) AddCompositeComponent(nft string, component string) {
+func (self *State) AddCompositeComponent(nft string, component string) error {
+	if nft == "" {
+		return fmt.Errorf("could not findi add component %s to empty nft", component)
+	}
 	self.CompositeStatus.AddComponent(nft, component)
+	return nil
 }
 
 type CompositeStatus struct {
@@ -125,9 +131,46 @@ func (self *Packs) Add(key string, amount float64, currency string) {
 	}
 }
 
-//An interface to get
-type NFTIDGenerator interface {
-	GetOrAdd(typ string, id string) string
-	Get(typ string, id string) string
-	Contains(typ string, id string) bool
+type NFTId struct {
+	Next     int
+	Mappings map[string]int
+}
+
+func (self *NFTId) GetOrAdd(typ string, id string) string {
+	if id == "" {
+		panic("foo")
+	}
+	key := fmt.Sprintf("%s-%s", typ, id)
+	value, ok := self.Mappings[key]
+	if ok {
+		return GenerateTextId(value)
+	}
+	value = self.Next
+	self.Mappings[key] = value
+	self.Next = value + 1
+	return GenerateTextId(value)
+}
+
+func (self *NFTId) Contains(typ string, id string) bool {
+	key := fmt.Sprintf("%s-%s", typ, id)
+	_, ok := self.Mappings[key]
+	return ok
+}
+
+func (self *NFTId) Get(typ string, id string) (string, error) {
+	key := fmt.Sprintf("%s-%s", typ, id)
+	value, ok := self.Mappings[key]
+	if ok {
+		return GenerateTextId(value), nil
+	}
+	return "", errors.New(fmt.Sprintf("Could not find nft mapping with key=%s", key))
+}
+
+func GenerateTextId(value int) string {
+	if value > 5000 {
+		value = value - 5000
+		return fmt.Sprintf("NULL%d", value)
+	}
+	return fmt.Sprintf("NFT%d", value)
+
 }

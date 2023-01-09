@@ -79,8 +79,15 @@ func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdg
 //
 // Connection of NFTs
 type AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnection struct {
+	// The page info
+	PageInfo AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo `json:"pageInfo"`
 	// The edges of this connection
 	Edges []AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge `json:"edges"`
+}
+
+// GetPageInfo returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnection) GetPageInfo() AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetEdges returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnection.Edges, and is useful for accessing the field via an interface.
@@ -193,13 +200,39 @@ func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdg
 	return v.Address
 }
 
+// AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Describes the page information inside a data connection, as required by Relay server specification standard
+type AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo struct {
+	HasNextPage bool   `json:"hasNextPage"`
+	EndCursor   string `json:"endCursor"`
+}
+
+// GetHasNextPage returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionPageInfo) GetEndCursor() string {
+	return v.EndCursor
+}
+
 // AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnection includes the requested fields of the GraphQL type TokenTransferConnection.
 // The GraphQL type's documentation follows.
 //
 // Connection of token transfers
 type AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnection struct {
+	// The page info
+	PageInfo AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo `json:"pageInfo"`
 	// The edges of this connection
 	Edges []AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge `json:"edges"`
+}
+
+// GetPageInfo returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnection) GetPageInfo() AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetEdges returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnection.Edges, and is useful for accessing the field via an interface.
@@ -303,6 +336,25 @@ type AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAc
 // GetAddress returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount.Address, and is useful for accessing the field via an interface.
 func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount) GetAddress() string {
 	return v.Address
+}
+
+// AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Describes the page information inside a data connection, as required by Relay server specification standard
+type AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo struct {
+	HasNextPage bool   `json:"hasNextPage"`
+	EndCursor   string `json:"endCursor"`
+}
+
+// GetHasNextPage returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionPageInfo) GetEndCursor() string {
+	return v.EndCursor
 }
 
 // AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransaction includes the requested fields of the GraphQL type Transaction.
@@ -614,6 +666,337 @@ func (v *TransactionEventsTransactionEventsEventConnectionPageInfo) GetHasNextPa
 	return v.HasNextPage
 }
 
+// TransactionNFTResponse is returned by TransactionNFT on success.
+type TransactionNFTResponse struct {
+	// Get a sealed transaction by ID (hash)
+	Transaction TransactionNFTTransaction `json:"transaction"`
+}
+
+// GetTransaction returns TransactionNFTResponse.Transaction, and is useful for accessing the field via an interface.
+func (v *TransactionNFTResponse) GetTransaction() TransactionNFTTransaction { return v.Transaction }
+
+// TransactionNFTTransaction includes the requested fields of the GraphQL type Transaction.
+// The GraphQL type's documentation follows.
+//
+// A sealed transaction in Flow blockchain
+type TransactionNFTTransaction struct {
+	// Query the NFT transfers in this transaction
+	NftTransfers TransactionNFTTransactionNftTransfersNFTTransferConnection `json:"nftTransfers"`
+}
+
+// GetNftTransfers returns TransactionNFTTransaction.NftTransfers, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransaction) GetNftTransfers() TransactionNFTTransactionNftTransfersNFTTransferConnection {
+	return v.NftTransfers
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnection includes the requested fields of the GraphQL type NFTTransferConnection.
+// The GraphQL type's documentation follows.
+//
+// Connection of NFTs
+type TransactionNFTTransactionNftTransfersNFTTransferConnection struct {
+	// The page info
+	PageInfo TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo `json:"pageInfo"`
+	// The edges of this connection
+	Edges []TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdge `json:"edges"`
+}
+
+// GetPageInfo returns TransactionNFTTransactionNftTransfersNFTTransferConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnection) GetPageInfo() TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo {
+	return v.PageInfo
+}
+
+// GetEdges returns TransactionNFTTransactionNftTransfersNFTTransferConnection.Edges, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnection) GetEdges() []TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdge {
+	return v.Edges
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdge includes the requested fields of the GraphQL type NFTTransferEdge.
+// The GraphQL type's documentation follows.
+//
+// Edges for NFTTransferConnection
+type TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdge struct {
+	// The payload of the edge
+	Node TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer `json:"node"`
+}
+
+// GetNode returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdge.Node, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdge) GetNode() TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer {
+	return v.Node
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer includes the requested fields of the GraphQL type NFTTransfer.
+// The GraphQL type's documentation follows.
+//
+// A transfer of NFT event
+type TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer struct {
+	// The NFT that is being transferred
+	Nft TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT `json:"nft"`
+	// The sender, could be null
+	From TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferFromAccount `json:"from"`
+	// The destination, could be null
+	To TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferToAccount `json:"to"`
+}
+
+// GetNft returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer.Nft, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer) GetNft() TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT {
+	return v.Nft
+}
+
+// GetFrom returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer.From, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer) GetFrom() TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferFromAccount {
+	return v.From
+}
+
+// GetTo returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer.To, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransfer) GetTo() TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferToAccount {
+	return v.To
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferFromAccount includes the requested fields of the GraphQL type Account.
+// The GraphQL type's documentation follows.
+//
+// Represents an account in the Flow blockchain
+type TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferFromAccount struct {
+	// The address of the account
+	Address string `json:"address"`
+}
+
+// GetAddress returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferFromAccount.Address, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferFromAccount) GetAddress() string {
+	return v.Address
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT includes the requested fields of the GraphQL type NFT.
+// The GraphQL type's documentation follows.
+//
+// NFT definition
+type TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT struct {
+	// The NFT ID
+	NftId string `json:"nftId"`
+	// The contract that defines the NFT
+	Contract TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFTContract `json:"contract"`
+}
+
+// GetNftId returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT.NftId, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT) GetNftId() string {
+	return v.NftId
+}
+
+// GetContract returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT.Contract, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFT) GetContract() TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFTContract {
+	return v.Contract
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFTContract includes the requested fields of the GraphQL type Contract.
+// The GraphQL type's documentation follows.
+//
+// Represents a deployed contract on the Flow blockchain
+type TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFTContract struct {
+	// Fully-qualified identifier of this contract
+	Id string `json:"id"`
+}
+
+// GetId returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFTContract.Id, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferNftNFTContract) GetId() string {
+	return v.Id
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferToAccount includes the requested fields of the GraphQL type Account.
+// The GraphQL type's documentation follows.
+//
+// Represents an account in the Flow blockchain
+type TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferToAccount struct {
+	// The address of the account
+	Address string `json:"address"`
+}
+
+// GetAddress returns TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferToAccount.Address, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionEdgesNFTTransferEdgeNodeNFTTransferToAccount) GetAddress() string {
+	return v.Address
+}
+
+// TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Describes the page information inside a data connection, as required by Relay server specification standard
+type TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo struct {
+	HasNextPage bool   `json:"hasNextPage"`
+	EndCursor   string `json:"endCursor"`
+}
+
+// GetHasNextPage returns TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *TransactionNFTTransactionNftTransfersNFTTransferConnectionPageInfo) GetEndCursor() string {
+	return v.EndCursor
+}
+
+// TransactionTokensResponse is returned by TransactionTokens on success.
+type TransactionTokensResponse struct {
+	// Get a sealed transaction by ID (hash)
+	Transaction TransactionTokensTransaction `json:"transaction"`
+}
+
+// GetTransaction returns TransactionTokensResponse.Transaction, and is useful for accessing the field via an interface.
+func (v *TransactionTokensResponse) GetTransaction() TransactionTokensTransaction {
+	return v.Transaction
+}
+
+// TransactionTokensTransaction includes the requested fields of the GraphQL type Transaction.
+// The GraphQL type's documentation follows.
+//
+// A sealed transaction in Flow blockchain
+type TransactionTokensTransaction struct {
+	// Query the token transfers in this transaction
+	TokenTransfers TransactionTokensTransactionTokenTransfersTokenTransferConnection `json:"tokenTransfers"`
+}
+
+// GetTokenTransfers returns TransactionTokensTransaction.TokenTransfers, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransaction) GetTokenTransfers() TransactionTokensTransactionTokenTransfersTokenTransferConnection {
+	return v.TokenTransfers
+}
+
+// TransactionTokensTransactionTokenTransfersTokenTransferConnection includes the requested fields of the GraphQL type TokenTransferConnection.
+// The GraphQL type's documentation follows.
+//
+// Connection of token transfers
+type TransactionTokensTransactionTokenTransfersTokenTransferConnection struct {
+	// The page info
+	PageInfo TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo `json:"pageInfo"`
+	// The edges of this connection
+	Edges []TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge `json:"edges"`
+}
+
+// GetPageInfo returns TransactionTokensTransactionTokenTransfersTokenTransferConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnection) GetPageInfo() TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo {
+	return v.PageInfo
+}
+
+// GetEdges returns TransactionTokensTransactionTokenTransfersTokenTransferConnection.Edges, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnection) GetEdges() []TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge {
+	return v.Edges
+}
+
+// TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge includes the requested fields of the GraphQL type TokenTransferEdge.
+// The GraphQL type's documentation follows.
+//
+// Edges inside TokenTransferConnection
+type TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge struct {
+	// The payload of the edge
+	Node TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer `json:"node"`
+}
+
+// GetNode returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge.Node, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge) GetNode() TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer {
+	return v.Node
+}
+
+// TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer includes the requested fields of the GraphQL type TokenTransfer.
+type TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer struct {
+	// The transfer type
+	Type TransferType `json:"type"`
+	// The amount of tokens transferred
+	Amount TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount `json:"amount"`
+	// A counterparty is the opposite side of a token transfer.
+	//
+	// For example if this `Transfer` record shows a 100 FLOW token balance withdrawal from the account A, this field will return the
+	// receiver of that 100 FLOW token.
+	//
+	// There could be multiple counterparties in a transaction, e.g. if A distributes 10 FLOW to account B and 5 FLOW to account C in one transaction,
+	// where in this case B and C are the counterparties of account A.
+	//
+	// In the case of multiple counterparties, this field will only return the most significant counterparty by the token amount.
+	// To get more details you would need to query the transfers from the transaction itself.
+	Counterparty TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount `json:"counterparty"`
+}
+
+// GetType returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer.Type, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer) GetType() TransferType {
+	return v.Type
+}
+
+// GetAmount returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer.Amount, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer) GetAmount() TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount {
+	return v.Amount
+}
+
+// GetCounterparty returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer.Counterparty, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransfer) GetCounterparty() TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount {
+	return v.Counterparty
+}
+
+// TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount includes the requested fields of the GraphQL type TokenAmount.
+type TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount struct {
+	// (Query) The definition of the fungible token
+	Token TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmountToken `json:"token"`
+	// The amount of the transferred tokens as a fixed-point value.
+	// JSON does not support fixed point values or big integers, therefore this value is
+	// encoded as a string with 8 decimal points.
+	//
+	// For example, 123456789 represents the value 1.23456789
+	Value string `json:"value"`
+}
+
+// GetToken returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount.Token, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount) GetToken() TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmountToken {
+	return v.Token
+}
+
+// GetValue returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount.Value, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmount) GetValue() string {
+	return v.Value
+}
+
+// TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmountToken includes the requested fields of the GraphQL type Token.
+// The GraphQL type's documentation follows.
+//
+// A fungible token on the Flow blockchain
+type TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmountToken struct {
+	// The ID of the token, identical with the contract ID of the token
+	Id string `json:"id"`
+}
+
+// GetId returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmountToken.Id, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferAmountTokenAmountToken) GetId() string {
+	return v.Id
+}
+
+// TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount includes the requested fields of the GraphQL type Account.
+// The GraphQL type's documentation follows.
+//
+// Represents an account in the Flow blockchain
+type TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount struct {
+	// The address of the account
+	Address string `json:"address"`
+}
+
+// GetAddress returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount.Address, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionEdgesTokenTransferEdgeNodeTokenTransferCounterpartyAccount) GetAddress() string {
+	return v.Address
+}
+
+// TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Describes the page information inside a data connection, as required by Relay server specification standard
+type TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo struct {
+	HasNextPage bool   `json:"hasNextPage"`
+	EndCursor   string `json:"endCursor"`
+}
+
+// GetHasNextPage returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *TransactionTokensTransactionTokenTransfersTokenTransferConnectionPageInfo) GetEndCursor() string {
+	return v.EndCursor
+}
+
 // Represents transfer a type
 type TransferType string
 
@@ -624,16 +1007,12 @@ const (
 
 // __AccountTransfersInput is used internally by genqlient
 type __AccountTransfersInput struct {
-	AccountId string    `json:"accountId"`
-	Since     time.Time `json:"since"`
-	After     string    `json:"after"`
+	AccountId string `json:"accountId"`
+	After     string `json:"after"`
 }
 
 // GetAccountId returns __AccountTransfersInput.AccountId, and is useful for accessing the field via an interface.
 func (v *__AccountTransfersInput) GetAccountId() string { return v.AccountId }
-
-// GetSince returns __AccountTransfersInput.Since, and is useful for accessing the field via an interface.
-func (v *__AccountTransfersInput) GetSince() time.Time { return v.Since }
 
 // GetAfter returns __AccountTransfersInput.After, and is useful for accessing the field via an interface.
 func (v *__AccountTransfersInput) GetAfter() string { return v.After }
@@ -650,19 +1029,42 @@ func (v *__TransactionEventsInput) GetTxID() string { return v.TxID }
 // GetAfter returns __TransactionEventsInput.After, and is useful for accessing the field via an interface.
 func (v *__TransactionEventsInput) GetAfter() string { return v.After }
 
+// __TransactionNFTInput is used internally by genqlient
+type __TransactionNFTInput struct {
+	TxId  string `json:"txId"`
+	After string `json:"after"`
+}
+
+// GetTxId returns __TransactionNFTInput.TxId, and is useful for accessing the field via an interface.
+func (v *__TransactionNFTInput) GetTxId() string { return v.TxId }
+
+// GetAfter returns __TransactionNFTInput.After, and is useful for accessing the field via an interface.
+func (v *__TransactionNFTInput) GetAfter() string { return v.After }
+
+// __TransactionTokensInput is used internally by genqlient
+type __TransactionTokensInput struct {
+	TxId  string `json:"txId"`
+	After string `json:"after"`
+}
+
+// GetTxId returns __TransactionTokensInput.TxId, and is useful for accessing the field via an interface.
+func (v *__TransactionTokensInput) GetTxId() string { return v.TxId }
+
+// GetAfter returns __TransactionTokensInput.After, and is useful for accessing the field via an interface.
+func (v *__TransactionTokensInput) GetAfter() string { return v.After }
+
 func AccountTransfers(
 	ctx context.Context,
 	client graphql.Client,
 	accountId string,
-	since time.Time,
 	after string,
 ) (*AccountTransfersResponse, error) {
 	req := &graphql.Request{
 		OpName: "AccountTransfers",
 		Query: `
-query AccountTransfers ($accountId: ID!, $since: Time!, $after: ID) {
+query AccountTransfers ($accountId: ID!, $after: ID) {
 	account(id: $accountId) {
-		transferTransactions(first: 50, ordering: Ascending, since: $since, after: $after) {
+		transferTransactions(first: 50, ordering: Ascending, after: $after) {
 			pageInfo {
 				hasNextPage
 				endCursor
@@ -691,6 +1093,10 @@ query AccountTransfers ($accountId: ID!, $since: Time!, $after: ID) {
 					}
 				}
 				nftTransfers {
+					pageInfo {
+						hasNextPage
+						endCursor
+					}
 					edges {
 						node {
 							nft {
@@ -709,6 +1115,10 @@ query AccountTransfers ($accountId: ID!, $since: Time!, $after: ID) {
 					}
 				}
 				tokenTransfers {
+					pageInfo {
+						hasNextPage
+						endCursor
+					}
 					edges {
 						node {
 							type
@@ -731,7 +1141,6 @@ query AccountTransfers ($accountId: ID!, $since: Time!, $after: ID) {
 `,
 		Variables: &__AccountTransfersInput{
 			AccountId: accountId,
-			Since:     since,
 			After:     after,
 		},
 	}
@@ -788,6 +1197,114 @@ query TransactionEvents ($txID: ID!, $after: ID) {
 	var err error
 
 	var data TransactionEventsResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+func TransactionNFT(
+	ctx context.Context,
+	client graphql.Client,
+	txId string,
+	after string,
+) (*TransactionNFTResponse, error) {
+	req := &graphql.Request{
+		OpName: "TransactionNFT",
+		Query: `
+query TransactionNFT ($txId: ID!, $after: ID) {
+	transaction(id: $txId) {
+		nftTransfers(first: 50, after: $after) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
+			edges {
+				node {
+					nft {
+						nftId
+						contract {
+							id
+						}
+					}
+					from {
+						address
+					}
+					to {
+						address
+					}
+				}
+			}
+		}
+	}
+}
+`,
+		Variables: &__TransactionNFTInput{
+			TxId:  txId,
+			After: after,
+		},
+	}
+	var err error
+
+	var data TransactionNFTResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+func TransactionTokens(
+	ctx context.Context,
+	client graphql.Client,
+	txId string,
+	after string,
+) (*TransactionTokensResponse, error) {
+	req := &graphql.Request{
+		OpName: "TransactionTokens",
+		Query: `
+query TransactionTokens ($txId: ID!, $after: ID) {
+	transaction(id: $txId) {
+		tokenTransfers(first: 50, after: $after) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
+			edges {
+				node {
+					type
+					amount {
+						token {
+							id
+						}
+						value
+					}
+					counterparty {
+						address
+					}
+				}
+			}
+		}
+	}
+}
+`,
+		Variables: &__TransactionTokensInput{
+			TxId:  txId,
+			After: after,
+		},
+	}
+	var err error
+
+	var data TransactionTokensResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

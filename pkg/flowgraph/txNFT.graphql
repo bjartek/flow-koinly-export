@@ -1,0 +1,26 @@
+query TransactionNFT($txId: ID!, $after:ID) {
+	transaction(id: $txId) {
+		nftTransfers(first:50, after:$after){
+			pageInfo {
+				hasNextPage
+					endCursor
+			}
+			edges {
+				node {
+					nft {
+						nftId 
+							contract {
+								id
+							}
+					}
+					from {
+						address
+					}
+					to {
+						address
+					}
+				}
+			}
+		}
+	}
+}
