@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Khan/genqlient/graphql"
+	"github.com/bjartek/flow-koinly-export/pkg/core"
 	"github.com/samber/lo"
 	"github.com/xeipuuv/gojsonpointer"
 )
@@ -60,7 +61,7 @@ func (self TransactionEventsTransactionEventsEventConnectionEdgesEventEdgeNodeEv
 	return self.Identifier
 }
 
-func (self TransactionEventsTransactionEventsEventConnectionEdgesEventEdge) Convert(_ int) Event {
+func (self TransactionEventsTransactionEventsEventConnectionEdgesEventEdge) Convert(_ int) core.Event {
 	keys := lo.Map(self.Node.Type.Fields, TransactionEventsTransactionEventsEventConnectionEdgesEventEdgeNodeEventTypeFieldsEventTypeField.Convert)
 	values := self.Node.Fields
 
@@ -82,7 +83,7 @@ func (self TransactionEventsTransactionEventsEventConnectionEdgesEventEdge) Conv
 		}
 	}
 
-	return Event{
+	return core.Event{
 		Name:   self.Node.Type.Id,
 		Fields: fields,
 	}

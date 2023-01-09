@@ -1,24 +1,16 @@
 package koinly
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
+
+	"github.com/bjartek/flow-koinly-export/pkg/core"
 )
 
-type Packs struct {
-	Mappings map[string]PackDetail
-}
-
-type PackDetail struct {
-	Amount   float64
-	Currency string
-}
-
-func (self *Packs) Add(key string, amount float64, currency string) {
-	self.Mappings[key] = PackDetail{
-		Amount:   amount,
-		Currency: currency,
+func NewKoinlyState() *core.State {
+	return &core.State{
+		Packs:           &core.Packs{Mappings: map[string]core.PackDetail{}},
+		CompositeStatus: &core.CompositeStatus{NFTS: map[string]map[string]bool{}},
+		NFTMappings:     &NFTId{Next: 1, Mappings: map[string]int{}},
 	}
 }
 
@@ -38,8 +30,23 @@ func (self *NFTId) GetOrAdd(typ string, id string) string {
 	}
 	value = self.Next
 	self.Mappings[key] = value
-	self.Next = self.Next + 1
+	self.Next = value + 1
 	return GenerateTextId(value)
+}
+
+func (self *NFTId) Contains(typ string, id string) bool {
+	key := fmt.Sprintf("%s-%s", typ, id)
+	_, ok := self.Mappings[key]
+	return ok
+}
+
+func (self *NFTId) Get(typ string, id string) string {
+	key := fmt.Sprintf("%s-%s", typ, id)
+	value, ok := self.Mappings[key]
+	if ok {
+		return GenerateTextId(value)
+	}
+	panic("Could not get existing NFTId")
 }
 
 func GenerateTextId(value int) string {
@@ -48,31 +55,5 @@ func GenerateTextId(value int) string {
 		return fmt.Sprintf("NULL%d", value)
 	}
 	return fmt.Sprintf("NFT%d", value)
-
-}
-
-func ReadNFTMapping(fileName string) (*NFTId, error) {
-	dropFile, err := os.ReadFile(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	var drop NFTId
-	err = json.Unmarshal(dropFile, &drop)
-	if err != nil {
-		return nil, err
-	}
-	return &drop, nil
-}
-
-func WriteNFTMapping(nft *NFTId, fileName string) error {
-
-	bytes, err := json.MarshalIndent(nft, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(fileName, bytes, 0644)
-	return err
 
 }

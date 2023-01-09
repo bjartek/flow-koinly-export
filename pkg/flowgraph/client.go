@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
+	"github.com/bjartek/flow-koinly-export/pkg/core"
 	"github.com/samber/lo"
 )
 
@@ -40,7 +41,7 @@ func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.wrapped.RoundTrip(req)
 }
 
-func GetEvents(ctx context.Context, hash string) ([]Event, error) {
+func GetEvents(ctx context.Context, hash string) ([]core.Event, error) {
 
 	client := NewFlowgraphClientFromEnv()
 
@@ -74,7 +75,7 @@ func GetEvents(ctx context.Context, hash string) ([]Event, error) {
 	}
 }
 
-func GetAccountTransfers(ctx context.Context, accountId string, since time.Time) ([]Entry, error) {
+func GetAccountTransfers(ctx context.Context, accountId string, since time.Time) ([]core.Entry, error) {
 	client := NewFlowgraphClientFromEnv()
 
 	resp, err := AccountTransfersSince(ctx, client, accountId, since)

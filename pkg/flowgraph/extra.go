@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Khan/genqlient/graphql"
+	"github.com/bjartek/flow-koinly-export/pkg/core"
 	"github.com/samber/lo"
 	"github.com/xeipuuv/gojsonpointer"
 )
@@ -209,7 +210,7 @@ query AccountTransfers ($accountId: ID!, $after: ID) {
 	return &data, err
 }
 
-func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransaction) Convert() Transaction {
+func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransaction) Convert() core.Transaction {
 
 	events := lo.Map(self.Events.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransactionEventsEventConnectionEdgesEventEdge.Convert)
 
@@ -233,7 +234,7 @@ func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionE
 		panic(err)
 	}
 
-	return Transaction{
+	return core.Transaction{
 		Hash:       self.Hash,
 		Time:       self.Time,
 		Script:     self.Script,
@@ -248,7 +249,7 @@ func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionE
 	return self.Identifier
 }
 
-func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransactionEventsEventConnectionEdgesEventEdge) Convert(_ int) Event {
+func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransactionEventsEventConnectionEdgesEventEdge) Convert(_ int) core.Event {
 	keys := lo.Map(self.Node.Type.Fields, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTransactionEventsEventConnectionEdgesEventEdgeNodeEventTypeFieldsEventTypeField.Convert)
 	values := self.Node.Fields
 
@@ -279,28 +280,21 @@ func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionE
 		}
 	}
 
-	return Event{
+	return core.Event{
 		Name:   self.Node.Type.Id,
 		Fields: fields,
 	}
 
 }
 
-func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge) Convert(_ int) NFTTransfer {
+func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge) Convert(_ int) core.NFTTransfer {
 
-	return NFTTransfer{
+	return core.NFTTransfer{
 		From:     self.Node.From.Address,
 		To:       self.Node.To.Address,
 		Contract: self.Node.Nft.Contract.Id,
 		Id:       self.Node.Nft.NftId,
 	}
-}
-
-type TokenTransfer struct {
-	Type         string
-	Amount       float64
-	Token        string
-	Counterparty string
 }
 
 //Use a bindings marshaller here
@@ -314,19 +308,19 @@ func ConvertString(value string) float64 {
 
 }
 
-func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge) Convert(_ int) TokenTransfer {
+func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge) Convert(_ int) core.TokenTransfer {
 	//500_000_000
 	//5.00000000
 
-	return TokenTransfer{
+	return core.TokenTransfer{
 		Type:         string(self.Node.Type),
 		Amount:       ConvertString(self.Node.Amount.Value),
 		Token:        self.Node.Amount.Token.Id,
 		Counterparty: self.Node.Counterparty.Address,
 	}
 }
-func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdge) Convert(_ int) Entry {
-	return Entry{
+func (self AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdge) Convert(_ int) core.Entry {
+	return core.Entry{
 		Transaction: self.Transaction.Convert(),
 		NFT:         lo.Map(self.NftTransfers.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeNftTransfersNFTTransferConnectionEdgesNFTTransferEdge.Convert),
 		Tokens:      lo.Map(self.TokenTransfers.Edges, AccountTransfersAccountTransferTransactionsAccountTransferConnectionEdgesAccountTransferEdgeTokenTransfersTokenTransferConnectionEdgesTokenTransferEdge.Convert),

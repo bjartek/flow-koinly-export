@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bjartek/flow-koinly-export/pkg/flowgraph"
+	"github.com/bjartek/flow-koinly-export/pkg/core"
 	"github.com/sanity-io/litter"
 	"golang.org/x/exp/slices"
 )
@@ -34,18 +34,21 @@ The following labels are allowed for incoming transactions:
 
 
 */
+
+const NameFindPack = "A.097bafa4e0b48eef.FindPack.NFT"
+
 //atm this just converts if there are FT involved or not
-func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *Packs) ([]Event, error) {
+func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
 
 	//TODO: if a tx is not using blocto, we need to check if we have to remove the TokenTransfer that is the fee, or even add it as fee in the format
 
 	fee := ""
 	feeCurrency := ""
 
-	transfers := []flowgraph.TokenTransfer{}
+	transfers := []core.TokenTransfer{}
 	//we remove the tokenTransfer that is a fee if it is here and add the fee field
 	for _, transfer := range entry.Tokens {
-		if transfer.Counterparty == "0xf919ee77447b7497" { //fee receiver
+		if transfer.Counterparty == "0xf919ee77447b7497" && transfer.Type == "Withdraw" { //fee receiver
 			fee = fmt.Sprintf("%f", transfer.Amount)
 			feeCurrency = ConvertCurrency(transfer.Token)
 		} else {
@@ -78,21 +81,15 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 		"209a21a38379d2322c72bebf7bb50060c70ccae0da1f6324bc02561278c89ffa", //open a find pack does not do anything
 		"15bbd08bc4c18fa30c9bcf0440cd93318cb447fbc9c14863e7465f087c8cf836", // versus bid, we handle this in settle
 		"a120159c824203e71c7478314209c87fb4c18039f011000e6683951d79119b12", //starly pack purchase, impossible to correlate pack to item
-		"0f8879f814e28abe0e38101d1865a0b05cf8fa59baa362b12c541409caff7e11", //flovatar attach component
-
 		"7fd94abec6a05dfc3722ee8205943f8fa291b9b0a56dd2bc7279ad4084d10ecd", //versus list marketplace
 		"f61c8f03b845500aa0baee2d659fae8719cb898e427f137263e2d974fe37dc3f", //flovatar list for sale component
-		"d6cfd4842774c0618f209cfc6d5d17217464ed685fc9506ba16e890a6b1340ed", //flovatar mint, would be fun to implement this in tax sw :D
 		"4ff04e92f3f7649b7c83dc03e5ea3da786768f7ef4c6de19a066d9f75ee36745", //versus bid, handled in settle!
-		"37b2f71c2376e4946229a5a5583e01229ee7dcb5d2fd96e21d5e021129cdad83", //charity mint
 		"00cf662d9cb1266d6add9707e1b85aaa54e0babcc7585663f2137b21d316cf4e", //flovatar listed for sale
-		//todo these below we can readd
-		"08c194dfd79cd979f8a6d37af91f5890b7f3278db179ea1bed004269ac85f3cc", //versus send NFT, if we chose to implement NFTID automatically here we can add this
-		"896bf1ffd62c43b418d4923244fe9ac4b138c005f44e8fa2cc063aec40733ea8", //zay codes swap, if we chose NFTID then implement
-		"fcdd17efba950df4e45d8885eb983433d8833bcd042d4e9d67d91cad94abe948", //zay codes swap
-		"cb04c6a0531eb4e0c85f63625f13882ebdbf7152598fa7d6efbae717bade095b", //flovatar airdrop many (newer)
-		"afb4f09ad0b295196bc13599b7d719de421c9252ad81e1b7971b3cd058031962", //flovatar airdrop
+		"37b2f71c2376e4946229a5a5583e01229ee7dcb5d2fd96e21d5e021129cdad83", //charity mint
 		"80c607d3c993d6617fe023400356e9d2fb86bbde04f2d24595a0831da54757c0", //add keys
+
+		//todo these below we can readd
+		"fcdd17efba950df4e45d8885eb983433d8833bcd042d4e9d67d91cad94abe948", //zay codes swap
 		"5e3e570f99de92bf0beec6c83273359d9cfa9c80a278a403b8283e24dd2d3248", //TODO: swapping pool see tx fd87d4d86e145e26f41d21955527b719bc29d3aaae9767561757d57c99b01c2c
 		"d0afe76af92b11ad43f26558ec3aecb1008a0429706aa8b6261ed08cc6b5f36b", //TODO: REVV defi tx b1bfb9b4c984625eeba828d55a37d0ffe146c1a32483fb4e93fce8ac1eddc953
 		"abcdf6bb2842402cedec581bed263c03454e53439ed02ccdc052350db1b940c9", //TODO: more defi flow/usdt 209311220240e10c871ed6e63cc52148ba6e3187df7b4852d41abc66a0ea867e
@@ -104,19 +101,153 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 		return nil, nil
 	}
 
-	if scriptHash == "a10d1ab887ad772ba33a70878ff96c5b9420bf6ad6e78ee3d445c91a8fb949b7" {
-		//airdropp Goobers, but we have paid for this before without adding value to the goober, so maybe find the goober send tx and remove that?
+	if scriptHash == "581049d525f2c0c7a21eeb9f6277747c5f0291a1778bf4395423aa10c1e6abb3" {
+
+		//flobot create
+		return nil, nil
+	}
+	if scriptHash == "d6cfd4842774c0618f209cfc6d5d17217464ed685fc9506ba16e890a6b1340ed" {
+		//flovatar create
+
+		destroyedIds := []string{}
+		eventType := "A.921ea449dffec68a.FlovatarComponent.Destroyed"
+		for _, e := range entry.Transaction.Events {
+			if e.Name == eventType {
+				id := e.Fields["id"].(string)
+				destroyedIds = append(destroyedIds, id)
+			}
+		}
+
+		flovatarId := ""
 		for i, nft := range entry.NFT {
-			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
 			ev := event
 			if i != 0 {
 				//we only pay the fee once
 				ev.FeeAmount = ""
 				ev.FeeCurrency = ""
 			}
-			ev.Label = "airdrop"
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+
+			//the components used to create the flovatar are cost
+			if nft.Contract == "A.921ea449dffec68a.FlovatarComponent" && slices.Contains(destroyedIds, nft.Id) {
+				//we have to have the NFTID for this component already if not something is wrong
+				componentId := state.GetNFTID(eventName, nft.Id)
+				ev.Label = "cost"
+				ev.SentAmount = "1"
+				ev.SentCurrency = componentId
+				entries = append(entries, ev)
+			}
+
+			if nft.Contract == "A.921ea449dffec68a.Flovatar" {
+				componentId := state.AddNFTID(eventName, nft.Id)
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = componentId
+				flovatarId = componentId
+				entries = append(entries, ev)
+			}
+		}
+
+		for _, nft := range entry.NFT {
+			if nft.Contract == "A.921ea449dffec68a.Flovatar" {
+				continue
+			}
+			if nft.Contract == "A.921ea449dffec68a.FlovatarComponent" && slices.Contains(destroyedIds, nft.Id) {
+				continue
+			}
+
+			//all components that where not destoryed as part of mint and is not the flovatar is on that flovatar
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			componentId := state.GetNFTID(eventName, nft.Id)
+			//we add the subComponent to state to tell that if we sell this we also sell this component
+			state.AddCompositeComponent(flovatarId, componentId)
+		}
+		return entries, nil
+
+	}
+
+	if slices.Contains([]string{
+		"bcf4800902a1cdccbae4966b32f728c036a8e82e97dd477bc4e44e9ad1ff8d23",
+		"0f8879f814e28abe0e38101d1865a0b05cf8fa59baa362b12c541409caff7e11",                //flovatar attach background
+		"2206353dc476ab1fadec47fe1ea083a66bb0ec72e88f976a09aaeea2484b1f80",                //eyes //attach glasses
+		"86bb52678dd47d7abcc457e4cbc473f7b8c237c0a882fc950327adc992a8f564",                //hat
+		"96e4656bb3d929a909be26404d8a9cadcc1a3773a49e20af4addb6bc416c704e"}, scriptHash) { //flovatar attach accessory
+
+		eventName := "A.921ea449dffec68a.Flovatar.NFT"
+		flovatar := state.GetNFTID(eventName, entry.Transaction.Arguments[0])
+		for _, nft := range entry.NFT {
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			componentId := state.GetNFTID(eventName, nft.Id)
+			if nft.From == "" {
+				present := state.RemoveCompositeComponent(flovatar, componentId)
+				if !present {
+					//we have removed a component from flovatar that we did not add it to, so we need to add it as an airdrop to ourself
+					ev := event
+					ev.Label = "airdrop"
+					ev.ReceivedAmount = "1"
+					ev.ReceivedCurrency = componentId
+					entries = append(entries, event)
+				}
+			} else {
+				state.AddCompositeComponent(flovatar, componentId)
+			}
+		}
+		return entries, nil
+	}
+
+	/*
+		if scriptHash == "a10d1ab887ad772ba33a70878ff96c5b9420bf6ad6e78ee3d445c91a8fb949b7" {
+			//TODO This is standard airdrop and can go away
+			//airdropp Goobers
+			for i, nft := range entry.NFT {
+				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+				ev := event
+				if i != 0 {
+					//we only pay the fee once
+					ev.FeeAmount = ""
+					ev.FeeCurrency = ""
+				}
+				ev.Label = "airdrop"
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
+				entries = append(entries, ev)
+			}
+			return entries, nil
+		}
+	*/
+
+	if scriptHash == "74b37352af81d750cb29f94e21ab449f09b2623e60a0074a75ac3f5aa09a10f7" {
+		//buy flovatarPack
+
+		//what do we do with packs that you bought but have not opened?
+		token := entry.Tokens[0]
+
+		event.Label = "Trade"
+		event.SentAmount = fmt.Sprintf("%v", token.Amount)
+		event.SentCurrency = ConvertCurrency(token.Token)
+		event.ReceivedAmount = "1"
+		event.ReceivedCurrency = state.AddNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[1])
+		state.AddPack(event.ReceivedCurrency, token.Amount, token.Token)
+		entries = append(entries, event)
+		return entries, nil
+	}
+
+	if scriptHash == "ecc73476640233932aefa6aed80688e877907968a27337cf35af0a3ee86c6d98" {
+		//open flovatar pack
+
+		packId := state.GetNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[0])
+		packPrice, _ := state.GetPack(packId)
+		amountPerEntry := packPrice.Amount / float64(len(entry.NFT))
+		for _, nft := range entry.NFT {
+
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			ev := event
+			//TODO: Pretty sure I am calculating gains here twice
+			ev.Label = "Swap"
 			ev.ReceivedAmount = "1"
-			ev.ReceivedCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
+			ev.ReceivedCurrency = state.GetNFTID(eventName, fmt.Sprint(nft.Id))
+			ev.SentCurrency = ConvertCurrency(packPrice.Currency)
+			ev.SentAmount = fmt.Sprintf("%f", amountPerEntry)
+
 			entries = append(entries, ev)
 		}
 		return entries, nil
@@ -134,33 +265,45 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 	}
 
 	if scriptHash == "56747555d52af593d3c56465852a3def2559fe36e5142e86edda4d91459266e6" {
+		//trade flovatar
 		token := entry.Tokens[0]
 		event.Label = "Trade"
-		nftId := nftIdMapping.GetOrAdd("A.921ea449dffec68a.Flovatar.NFT", string(entry.Transaction.Arguments[1]))
+		nftId := state.GetNFTID("A.921ea449dffec68a.Flovatar.NFT", string(entry.Transaction.Arguments[1]))
 
+		ev := event
+		ev.Label = "Trade"
 		if token.Type == "Withdraw" {
-			event.SentAmount = fmt.Sprintf("%v", token.Amount)
-			event.SentCurrency = ConvertCurrency(token.Token)
-			event.ReceivedAmount = "1"
-			event.ReceivedCurrency = nftId
+			ev.SentAmount = fmt.Sprintf("%v", token.Amount)
+			ev.SentCurrency = ConvertCurrency(token.Token)
+			ev.ReceivedAmount = "1"
+			ev.ReceivedCurrency = nftId
 
 		} else if token.Type == "Deposit" {
-			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
-			event.ReceivedCurrency = ConvertCurrency(token.Token)
-			event.SentAmount = "1"
-			event.SentCurrency = nftId
+			ev.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
+			ev.ReceivedCurrency = ConvertCurrency(token.Token)
+			ev.SentAmount = "1"
+			ev.SentCurrency = nftId
+
+			components := state.GetCompositeComponent(nftId)
+			for _, component := range components {
+				ev2 := event
+				ev2.SentCurrency = component
+				ev2.SentAmount = "1"
+				ev2.Label = "cost"
+				ev2.Description = fmt.Sprintf("%s component sold as part of main sale", ev2.Description)
+				entries = append(entries, ev2)
+			}
 		}
-
-		entries = append(entries, event)
+		entries = append(entries, ev)
 		return entries, nil
-
 	}
 
+	//FT gifts
 	if scriptHash == "47851586d962335e3f7d9e5d11a4c527ee4b5fd1c3895e3ce1b9c2821f60b166" ||
 		scriptHash == "25717e66e70730e00440b2b9e52b581021825241cb540e46c0aa5cf4a9514b58" || //blocto
 		scriptHash == "1f4921d504e24e11bd06e57feff2d6c3567893ab0e90aa6230b714d0dfad85aa" {
 		token := entry.Tokens[0]
-		event.Label = "gift"
+		event.Label = "income"
 		event.SentAmount = fmt.Sprintf("%v", token.Amount)
 		event.SentCurrency = ConvertCurrency(token.Token)
 		entries = append(entries, event)
@@ -197,21 +340,17 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 
 		token := entry.Tokens[0]
 		id := entry.Transaction.Arguments[1]
-		event := Event{
-			Date:        t,
-			TxHash:      entry.Transaction.Hash,
-			Description: fmt.Sprintf("Flovatar.Component=%s url=https://f.dnz.dev/%s ", id, entry.Transaction.Hash),
-		}
 
-		nftId := nftIdMapping.GetOrAdd("A.921ea449dffec68a.FlovatarComponent.NFT", id)
-
+		event.Label = "Trade"
 		if token.Type == "Withdraw" {
+			nftId := state.AddNFTID("A.921ea449dffec68a.FlovatarComponent.NFT", id)
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
 			event.SentCurrency = ConvertCurrency(token.Token)
 			event.ReceivedAmount = "1"
 			event.ReceivedCurrency = nftId
 
 		} else if token.Type == "Deposit" {
+			nftId := state.GetNFTID("A.921ea449dffec68a.FlovatarComponent.NFT", id)
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
 			event.SentAmount = "1"
@@ -223,23 +362,20 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 	}
 	if scriptHash == "2b26cb7784ee28b5747d3a04cff60ca3f9ae93cf555eca3d4b7572b54eb75f46" {
 		//versus marketplace
+
+		event.Label = "Trade"
 		token := entry.Tokens[0]
 		id := entry.Transaction.Arguments[1]
-		event := Event{
-			Date:        t,
-			TxHash:      entry.Transaction.Hash,
-			Description: fmt.Sprintf("secondary Versus.Art=%s url=https://f.dnz.dev/%s ", id, entry.Transaction.Hash),
-		}
-
-		nftId := nftIdMapping.GetOrAdd("A.d796ff17107bbff6.Art.NFT", id)
 
 		if token.Type == "Withdraw" {
+			nftId := state.AddNFTID("A.d796ff17107bbff6.Art.NFT", id)
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
 			event.SentCurrency = ConvertCurrency(token.Token)
 			event.ReceivedAmount = "1"
 			event.ReceivedCurrency = nftId
 
 		} else if token.Type == "Deposit" {
+			nftId := state.GetNFTID("A.d796ff17107bbff6.Art.NFT", id)
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
 			event.SentAmount = "1"
@@ -252,33 +388,26 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 	if scriptHash == "cc36a9819d06d40062b621ec505d97ebd9238d9e096cdd2a4b84a3fd1e1df5e5" {
 		//versus settle
 		eventType := "A.d796ff17107bbff6.Auction.TokenPurchased"
-		for _, event := range entry.Transaction.Events {
-			to, _ := event.Fields["to"].(string)
-			if event.Name == eventType && to == address {
-				price, _ := event.Fields["price"].(string)
-				artId, _ := event.Fields["artId"].(string)
+		for _, e := range entry.Transaction.Events {
+			to, _ := e.Fields["to"].(string)
+			if e.Name == eventType && to == address {
+				price, _ := e.Fields["price"].(string)
+				artId, _ := e.Fields["artId"].(string)
+				nftId := state.AddNFTID("A.d796ff17107bbff6.Art.NFT", artId)
 
-				if artId == "" {
-					litter.Dump(event.Fields)
-					panic("foo2")
-				}
-				nftId := nftIdMapping.GetOrAdd("A.d796ff17107bbff6.Art.NFT", artId)
-
-				event := Event{
-					Date:             t,
-					TxHash:           entry.Transaction.Hash,
-					Description:      fmt.Sprintf("primary Versus.Art=%s url=https://f.dnz.dev/%s ", artId, entry.Transaction.Hash),
-					SentAmount:       price,
-					SentCurrency:     ConvertCurrency("A.1654653399040a61.FlowToken"),
-					ReceivedAmount:   "1",
-					ReceivedCurrency: nftId,
-				}
-				entries = append(entries, event)
+				ev := event
+				ev.Label = "Trade"
+				ev.SentAmount = price
+				ev.SentCurrency = ConvertCurrency("A.1654653399040a61.FlowToken")
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = nftId
+				entries = append(entries, ev)
 			}
 		}
 		return entries, nil
 	}
 
+	//This should be generalized to only check the label type against a scriptHash, since the logic is the same for other tx of the same pattern
 	if scriptHash == "4968e16ef6c4b0fa5a16a321f3aaee98f202fe0f38759178d928a921fecd6ac4" || scriptHash == "a8e34487a5ebb460fb05dbcfb06e7f00b5dbe5e41462ddcbfd550e078a87d8f0" {
 		token := entry.Tokens[0]
 		event.Label = "reward"
@@ -289,6 +418,7 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 	}
 
 	if scriptHash == "c2080352d0b3a813a73f9d48b94e4371aef10a20416da310c0ecb3b69dc8acf8" {
+		//FindPack buy
 
 		if numberOfFTTransfers == 0 {
 			//we got airdropped a pack so it is worth nothing for us, handle it in open pack
@@ -298,24 +428,29 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 		token := entry.Tokens[0]
 		sumPerPack := token.Amount / float64(len(entry.NFT))
 
-		for _, nft := range entry.NFT {
+		for i, nft := range entry.NFT {
 			ev := event
+
+			if i != 0 {
+				ev.FeeAmount = ""
+				ev.FeeCurrency = ""
+			}
 			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			ev.Label = "Trade"
 			ev.ReceivedAmount = "1"
-			ev.ReceivedCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
+			ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 			ev.SentAmount = fmt.Sprintf("%v", sumPerPack)
 			ev.SentCurrency = ConvertCurrency(token.Token)
-			//we say that this pack with this NFTID is worth this much of funds of this type
-			packs.Add(ev.ReceivedCurrency, sumPerPack, token.Token)
+			state.AddPack(ev.ReceivedCurrency, sumPerPack, token.Token)
 
-			entries = append(entries, event)
+			entries = append(entries, ev)
 		}
 		return entries, nil
 
 	}
 
 	if scriptHash == "80719f6a41daeb27f9ac5d7f49ea02b4adb45b1ee34272cd42603e6ca06aaeb3" {
-		//fullfillReward
+		//FindPack redeem
 
 		//a map to hold all packs that where revealed to you in this tx
 		packMappings := map[string][]string{}
@@ -336,9 +471,8 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 			packId, _ := ev.Fields["packId"].(string)
 			rewardId, _ := ev.Fields["rewardId"].(string)
 			rewardType, _ := ev.Fields["rewardType"].(string)
-			rewardNFT := nftIdMapping.GetOrAdd(rewardType, rewardId)
-
-			packMappingId := nftIdMapping.GetOrAdd("A.097bafa4e0b48eef.FindPack.NFT", packId)
+			rewardNFT := state.AddNFTID(rewardType, rewardId)
+			packMappingId := state.GetNFTID(NameFindPack, packId)
 
 			packForId, ok := packMappings[packMappingId]
 			if !ok {
@@ -350,7 +484,7 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 		//we now have a multimap of NFTX -> NFTX,NFTX where the first is an pack NFT and the others are reward NFTS
 
 		for packId, rewards := range packMappings {
-			packPurchase, ok := packs.Mappings[packId]
+			packPurchase, ok := state.GetPack(packId)
 			if !ok {
 				for _, reward := range rewards {
 					ev := event
@@ -364,7 +498,7 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 
 				for _, reward := range rewards {
 					ev := event
-					ev.Label = "Trade"
+					ev.Label = "Swap"
 					ev.SentAmount = fmt.Sprintf("%f", pricePerReward)
 					ev.SentCurrency = ConvertCurrency(packPurchase.Currency)
 					ev.ReceivedAmount = "1"
@@ -381,71 +515,77 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 	//can we just do this here?
 	if numberOfNFTTransfers > 0 && numberOfFTTransfers == 0 {
 		//airdrops
-		//TODO: here we might add something that allows you to specify mappings
-		for _, nft := range entry.NFT {
+		for i, nft := range entry.NFT {
 			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-			event := Event{
-				Date:             t,
-				TxHash:           entry.Transaction.Hash,
-				Description:      fmt.Sprintf(" url=https://f.dnz.dev/%s ", entry.Transaction.Hash),
-				Label:            "airdrop",
-				ReceivedAmount:   "1",
-				ReceivedCurrency: nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id)),
+
+			ev := event
+			if i != 0 {
+				ev.FeeAmount = ""
+				ev.FeeCurrency = ""
 			}
-			entries = append(entries, event)
+
+			if nft.From == address {
+				ev.SentAmount = "1"
+				ev.SentCurrency = state.GetNFTID(eventName, fmt.Sprint(nft.Id))
+				ev.Label = "income"
+			} else {
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+				ev.Label = "airdrop"
+			}
+			entries = append(entries, ev)
 		}
 		return entries, nil
 	}
+
 	//we spend some funds and get X nfts back
 	if numberOfFTTransfers == 1 && numberOfNFTTransfers > 1 {
 		token := entry.Tokens[0]
 		eachSum := token.Amount / float64(len(entry.NFT))
 
-		for _, nft := range entry.NFT {
+		for i, nft := range entry.NFT {
 
 			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-			event := Event{
-				Date:        t,
-				TxHash:      entry.Transaction.Hash,
-				Description: fmt.Sprintf("counterparty=%s url=https://f.dnz.dev/%s ", token.Counterparty, entry.Transaction.Hash),
-			}
+			ev := event
+			ev.Label = "Trade"
 			if token.Type == "Withdraw" {
-				event.SentAmount = fmt.Sprintf("%v", eachSum)
-				event.SentCurrency = ConvertCurrency(token.Token)
-				event.ReceivedAmount = "1"
-				event.ReceivedCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
+				ev.SentAmount = fmt.Sprintf("%v", eachSum)
+				ev.SentCurrency = ConvertCurrency(token.Token)
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 
 			} else if token.Type == "Deposit" {
-				event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
-				event.ReceivedCurrency = ConvertCurrency(token.Token)
-				event.SentAmount = "1"
-				event.SentCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
+				//we only pay the fee once
+				if i != 0 {
+					ev.FeeAmount = ""
+					ev.FeeCurrency = ""
+				}
+				ev.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
+				ev.ReceivedCurrency = ConvertCurrency(token.Token)
+				ev.SentAmount = "1"
+				ev.SentCurrency = state.GetNFTID(eventName, fmt.Sprint(nft.Id))
 			}
-			entries = append(entries, event)
+			entries = append(entries, ev)
 		}
 		return entries, nil
 	}
+
 	if numberOfFTTransfers == 1 && numberOfNFTTransfers == 1 {
 		token := entry.Tokens[0]
 		nft := entry.NFT[0]
 
 		eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-		event := Event{
-			Date:        t,
-			TxHash:      entry.Transaction.Hash,
-			Description: fmt.Sprintf("counterparty=%s url=https://f.dnz.dev/%s ", token.Counterparty, entry.Transaction.Hash),
-		}
 		if token.Type == "Withdraw" {
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
 			event.SentCurrency = ConvertCurrency(token.Token)
 			event.ReceivedAmount = "1"
-			event.ReceivedCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
+			event.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 
 		} else if token.Type == "Deposit" {
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
 			event.SentAmount = "1"
-			event.SentCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
+			event.SentCurrency = state.GetNFTID(eventName, fmt.Sprint(nft.Id))
 		}
 
 		entries = append(entries, event)
@@ -454,23 +594,14 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 
 	if numberOfFTTransfers == 1 {
 		token := entry.Tokens[0]
-		event := Event{
-			Date:        t,
-			TxHash:      entry.Transaction.Hash,
-			Description: fmt.Sprintf("counterparty=%s url=https://f.dnz.dev/%s ", token.Counterparty, entry.Transaction.Hash),
-		}
 		if token.Type == "Withdraw" {
+			event.Label = "income"
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
-			event.Label = "gift"
-
 			event.SentCurrency = ConvertCurrency(token.Token)
 		} else if token.Type == "Deposit" {
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
 			event.Label = "airdrop"
-		} else {
-			litter.Dump(entry)
-			os.Exit(1)
 		}
 		entries = append(entries, event)
 		return entries, nil
@@ -478,12 +609,7 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 
 	if numberOfFTTransfers == 2 {
 
-		event := Event{
-			Date:        t,
-			TxHash:      entry.Transaction.Hash,
-			Label:       "Trade",
-			Description: fmt.Sprintf("url=https://f.dnz.dev/%s ", entry.Transaction.Hash),
-		}
+		event.Label = "Trade"
 		for _, token := range entry.Tokens {
 			if token.Type == "Withdraw" {
 				event.SentAmount = fmt.Sprintf("%v", token.Amount)
@@ -501,34 +627,6 @@ func Convert(address string, entry flowgraph.Entry, nftIdMapping *NFTId, packs *
 		//DEFI stuff
 		return nil, nil
 	}
-	//versus market
-
-	/*
-		//versus send NFT, this might be handled generically I do not know
-		if scriptHash == "08c194dfd79cd979f8a6d37af91f5890b7f3278db179ea1bed004269ac85f3cc" {
-
-			event := Event{
-				Date:         time,
-				TxHash:       entry.Transaction.Hash,
-				Description:  fmt.Sprintf("counterparty=%s url=https://f.dnz.dev/%s ", entry.NFT[0].To, entry.Transaction.Hash),
-				SentAmount:   price,
-				SentCurrency: ConvertCurrency("A.1654653399040a61.FlowToken"),
-			}
-			entries = append(entries, event)
-			return entries, nil
-
-			/*
-			 NFT: []flowgraph.NFTTransfer{
-			    flowgraph.NFTTransfer{
-			      From: "0x886f3aeaf848c535",
-			      To: "0x4bcda1de73a17d95",
-			      Contract: "A.d796ff17107bbff6.Art",
-			      Id: "289",
-			    },
-			  },
-			  Tokens: []flowgraph.TokenTransfer{},
-	*/
-	//}
 
 	litter.Dump(entry)
 	fmt.Println("Count not handle tx")
@@ -545,6 +643,7 @@ func ConvertCurrency(currency string) string {
 		"A.1654653399040a61.FlowToken":             "ID:7961",
 		"A.0f9df91c9121c460.BloctoToken":           "ID:35927",
 		"A.cfdd90d4a00f7b5b.TeleportedTetherToken": "USDT",
+		"A.142fa6570b62fd97.StarlyToken":           "ID:773411",
 	}
 	return currencyMap[currency]
 
