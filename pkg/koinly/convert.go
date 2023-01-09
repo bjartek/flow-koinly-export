@@ -44,6 +44,8 @@ const NameBl0xPack = "A.7620acf6d7f2468a.Bl0xPack.NFT"
 //atm this just converts if there are FT involved or not
 func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
 
+	//TODO: look into this https//f.dnz.dev/04224742926cceafda1dc9ef45d3fa2e89bc17c2db16f65f0a4e63d4b859ed57, comes up as swap for alex
+	//TODO; find names https://f.dnz.dev/39fe10d09d0457f9fc69c2148aa20fe1d435f218437ecc23e54551f415e13add
 	//TODO: if a tx is not using blocto, we need to check if we have to remove the TokenTransfer that is the fee, or even add it as fee in the format
 
 	fee := ""
@@ -82,6 +84,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	scriptHash := entry.Transaction.ScriptHash
 	ignoreHashes := []string{
 		//these can just be thrown away
+		"1f177b71729f1a54ce62ca64d246f38418c8fb78189a1b223be8be479e15a350", //delist flovatar
 		"7a7a69fdd932f4c47e6677c32f151edb9f70df19a8f2c31f3574f761a5b8ebe2", //versus list
 		"209a21a38379d2322c72bebf7bb50060c70ccae0da1f6324bc02561278c89ffa", //open a find pack does not do anything
 		"15bbd08bc4c18fa30c9bcf0440cd93318cb447fbc9c14863e7465f087c8cf836", // versus bid, we handle this in settle
@@ -90,6 +93,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		"f61c8f03b845500aa0baee2d659fae8719cb898e427f137263e2d974fe37dc3f", //flovatar list for sale component
 		"4ff04e92f3f7649b7c83dc03e5ea3da786768f7ef4c6de19a066d9f75ee36745", //versus bid, handled in settle!
 		"00cf662d9cb1266d6add9707e1b85aaa54e0babcc7585663f2137b21d316cf4e", //flovatar listed for sale
+		"926cf83e0b0de6bb32291b93b1070fc98224686b3c6f7d7962d8fd287b98596b", //flovatar listed for sale new
 		"37b2f71c2376e4946229a5a5583e01229ee7dcb5d2fd96e21d5e021129cdad83", //charity mint
 		"80c607d3c993d6617fe023400356e9d2fb86bbde04f2d24595a0831da54757c0", //add keys
 
@@ -106,11 +110,15 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return nil, nil
 	}
 
-	if scriptHash == "581049d525f2c0c7a21eeb9f6277747c5f0291a1778bf4395423aa10c1e6abb3" {
+	if scriptHash == "2a1e7927441136c24b1eadcb316abc96c8b32faf403c6bf2d5e412e3e71bf51a" {
+		//find lease extended
+	}
 
+	if scriptHash == "581049d525f2c0c7a21eeb9f6277747c5f0291a1778bf4395423aa10c1e6abb3" {
 		//flobot create
 		return nil, nil
 	}
+
 	if scriptHash == "d6cfd4842774c0618f209cfc6d5d17217464ed685fc9506ba16e890a6b1340ed" {
 		//flovatar create
 
@@ -241,12 +249,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		}
 	*/
 
-	if scriptHash == "74b37352af81d750cb29f94e21ab449f09b2623e60a0074a75ac3f5aa09a10f7" {
+	if scriptHash == "74b37352af81d750cb29f94e21ab449f09b2623e60a0074a75ac3f5aa09a10f7" || scriptHash == "a83c8ec471199a12b496f070ea6036962a49f9c1f7210ed01280ef1603deae71" {
 		//buy flovatarPack
 
 		//what do we do with packs that you bought but have not opened?
 		token := entry.Tokens[0]
-
 		event.Label = "Trade"
 		event.SentAmount = fmt.Sprintf("%v", token.Amount)
 		event.SentCurrency = ConvertCurrency(token.Token)
@@ -257,7 +264,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	if scriptHash == "ecc73476640233932aefa6aed80688e877907968a27337cf35af0a3ee86c6d98" {
+	if scriptHash == "ecc73476640233932aefa6aed80688e877907968a27337cf35af0a3ee86c6d98" || scriptHash == "d0ec403b0c44a4936d563834bdb322734fa514fb7d6fcc60843a663116cf1724" {
 		//open flovatar pack
 
 		// somehow I have flovar packs that i have never received
@@ -352,7 +359,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	if scriptHash == "c10d71b54483f24bae20db5109a748f792622dcaf170d61f6f8dfd37503a3a46" {
+	if scriptHash == "c10d71b54483f24bae20db5109a748f792622dcaf170d61f6f8dfd37503a3a46" || scriptHash == "dad0d9a3cd6c593a7b3a6c04a0ea227c3b93e4badf81ccd4b2d353bf6722a9fc" {
 		//flovatar component market
 
 		token := entry.Tokens[0]
@@ -633,11 +640,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				}
 				ev.SentAmount = "1"
 				ev.SentCurrency = nftId
-				ev.Label = "income"
+				//				ev.Label = "income"
 			} else {
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
-				ev.Label = "airdrop"
+				//				ev.Label = "airdrop"
 			}
 			entries = append(entries, ev)
 		}
@@ -725,13 +732,13 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	if numberOfFTTransfers == 1 {
 		token := entry.Tokens[0]
 		if token.Type == "Withdraw" {
-			event.Label = "income"
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
 			event.SentCurrency = ConvertCurrency(token.Token)
+			event.Label = "airdrop"
 		} else if token.Type == "Deposit" {
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
-			event.Label = "airdrop"
+			event.Label = "income"
 		}
 		entries = append(entries, event)
 		return entries, nil
