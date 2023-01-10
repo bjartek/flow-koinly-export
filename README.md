@@ -36,3 +36,19 @@ Thanks to https://flowscan.org for a graphql api and permission to use it for th
 ## referall
 
 Use my coinly referall link to save some cash https://koinly.io/?via=D607662E
+
+
+## Architecture of new version
+
+ - fetch down everything
+ - run a set of initial filters to filter away things that we get but that we really do not need
+ - run transformers transforms the paylod into a structure that has incomming/outgoing and nft/transfer for both of them
+  - extract fee 
+	- extract out incomming/outgoing from events that flowgraph have not identified
+ - run a set of preparers to gather state if you need it in the classifiers. this could be like price of packs from pack purcase tx into a registry
+  - paylod will now have registries of data 
+ - run classifiers to classify a entry, these have to have priority and be run in order, a classifier can access and add to reg
+  - can add/mutate registries  becasue some patterns cannot do this in preparers. like flovatar state
+- run validators to validate the output.  
+ - check that we do not send out NFTx we do not have.  
+ - check that atmost one entry from a given tx have a fee 
