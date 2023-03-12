@@ -46,9 +46,8 @@ const ZayTraderEvent = "A.4c577a03bc1a82e0.ZayTraderV2.TradeExecuted"
 // atm this just converts if there are FT involved or not
 func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
 
-	//TODO: look into this https//f.dnz.dev/04224742926cceafda1dc9ef45d3fa2e89bc17c2db16f65f0a4e63d4b859ed57, comes up as swap for alex
+	//TODO: starly staking bug aaf2ac69a5ea03a24294e8545fcfc5010151ca81d16b815b3a1ffa03d2b6998a
 	//TODO; find names https://f.dnz.dev/39fe10d09d0457f9fc69c2148aa20fe1d435f218437ecc23e54551f415e13add
-	//TODO: if a tx is not using blocto, we need to check if we have to remove the TokenTransfer that is the fee, or even add it as fee in the format
 
 	fee := ""
 	feeCurrency := ""
@@ -68,10 +67,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	entries := []Event{}
 	t := DateTime{Time: entry.Transaction.Time}
 
+	scriptHash := entry.Transaction.ScriptHash
 	event := Event{
 		Date:        t,
 		TxHash:      entry.Transaction.Hash,
-		Description: fmt.Sprintf("url=https://f.dnz.dev/%s ", entry.Transaction.Hash),
+		Description: fmt.Sprintf("url=https://f.dnz.dev/%s script=%s", entry.Transaction.Hash, scriptHash),
 		FeeAmount:   fee,
 		FeeCurrency: feeCurrency,
 	}
@@ -104,7 +104,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		//TODO consider saving as skipped
 		return nil, nil
 	}
-	scriptHash := entry.Transaction.ScriptHash
 	ignoreHashes := []string{
 		//these can just be thrown away
 		"1f177b71729f1a54ce62ca64d246f38418c8fb78189a1b223be8be479e15a350", //delist flovatar
@@ -814,9 +813,33 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 	if numberOfFTTransfers == 3 {
 
-		//DEFI stuff
-		//TODO: fix
-		return nil, nil //fmt.Errorf("defi")
+		if len(ftSend) == 1 {
+			//we are sending 1 in and getting two back
+			amount := ftSend[0].Amount / 2
+
+			for _, ft := range ftReceived {
+				ev := event
+				ev.Label = "defi"
+				ev.ReceivedCurrency = ConvertCurrency(ft.Token)
+				ev.ReceivedAmount = fmt.Sprintf("%v", ft.Amount)
+				ev.SentCurrency = ConvertCurrency(ftSend[0].Token)
+				ev.SentAmount = fmt.Sprintf("%v", amount)
+				entries = append(entries, ev)
+			}
+
+		} else {
+			amount := ftReceived[0].Amount / 2
+			for _, ft := range ftSend {
+				ev := event
+				ev.Label = "defi"
+				ev.SentCurrency = ConvertCurrency(ft.Token)
+				ev.SentAmount = fmt.Sprintf("%v", ft.Amount)
+				ev.ReceivedCurrency = ConvertCurrency(ftReceived[0].Token)
+				ev.ReceivedAmount = fmt.Sprintf("%v", amount)
+				entries = append(entries, ev)
+			}
+		}
+		return entries, nil
 	}
 
 	litter.Dump(entry)
