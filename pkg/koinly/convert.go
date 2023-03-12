@@ -6,6 +6,7 @@ import (
 
 	"github.com/bjartek/flow-koinly-export/pkg/core"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/sanity-io/litter"
 	"golang.org/x/exp/slices"
 )
@@ -40,8 +41,9 @@ const NameFindPack = "A.097bafa4e0b48eef.FindPack.NFT"
 const NameVersusArt = "A.d796ff17107bbff6.Art.NFT"
 const NameFlovatarNFT = "A.921ea449dffec68a.Flovatar.NFT"
 const NameBl0xPack = "A.7620acf6d7f2468a.Bl0xPack.NFT"
+const ZayTraderEvent = "A.4c577a03bc1a82e0.ZayTraderV2.TradeExecuted"
 
-//atm this just converts if there are FT involved or not
+// atm this just converts if there are FT involved or not
 func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
 
 	//TODO: look into this https//f.dnz.dev/04224742926cceafda1dc9ef45d3fa2e89bc17c2db16f65f0a4e63d4b859ed57, comes up as swap for alex
@@ -72,6 +74,27 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		Description: fmt.Sprintf("url=https://f.dnz.dev/%s ", entry.Transaction.Hash),
 		FeeAmount:   fee,
 		FeeCurrency: feeCurrency,
+	}
+
+	isZayTrade := lo.ContainsBy(entry.Transaction.Events, func(e core.Event) bool {
+		return e.Name == ZayTraderEvent
+	})
+
+	ftSend := []core.TokenTransfer{}
+	ftReceived := []core.TokenTransfer{}
+	for _, t := range entry.Tokens {
+		if t.Type == "Deposit" {
+			ftReceived = append(ftReceived, t)
+		}
+		ftSend = append(ftSend, t)
+	}
+	nftSend := []core.NFTTransfer{}
+	nftReceived := []core.NFTTransfer{}
+	for _, t := range entry.NFT {
+		if t.To == address {
+			nftReceived = append(nftReceived, t)
+		}
+		nftSend = append(nftSend, t)
 	}
 
 	numberOfFTTransfers := len(entry.Tokens)
@@ -112,6 +135,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 	if scriptHash == "2a1e7927441136c24b1eadcb316abc96c8b32faf403c6bf2d5e412e3e71bf51a" {
 		//find lease extended
+		return nil, nil
 	}
 
 	if scriptHash == "581049d525f2c0c7a21eeb9f6277747c5f0291a1778bf4395423aa10c1e6abb3" {
@@ -144,10 +168,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			//the components used to create the flovatar are cost
 			if nft.Contract == "A.921ea449dffec68a.FlovatarComponent" && slices.Contains(destroyedIds, nft.Id) {
 				//we have to have the NFTID for this component already if not something is wrong
-				componentId, err := state.GetNFTID(eventName, nft.Id)
-				if err != nil {
-					return nil, err
-				}
+				componentId := state.AddNFTID(eventName, nft.Id)
 				ev.Label = "cost"
 				ev.SentAmount = "1"
 				ev.SentCurrency = componentId
@@ -228,26 +249,24 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	/*
-		if scriptHash == "a10d1ab887ad772ba33a70878ff96c5b9420bf6ad6e78ee3d445c91a8fb949b7" {
-			//TODO This is standard airdrop and can go away
-			//airdropp Goobers
-			for i, nft := range entry.NFT {
-				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-				ev := event
-				if i != 0 {
-					//we only pay the fee once
-					ev.FeeAmount = ""
-					ev.FeeCurrency = ""
-				}
-				ev.Label = "airdrop"
-				ev.ReceivedAmount = "1"
-				ev.ReceivedCurrency = nftIdMapping.GetOrAdd(eventName, fmt.Sprint(nft.Id))
-				entries = append(entries, ev)
+	if scriptHash == "a10d1ab887ad772ba33a70878ff96c5b9420bf6ad6e78ee3d445c91a8fb949b7" {
+		//TODO This is standard airdrop and can go away
+		//airdropp Goobers
+		for i, nft := range entry.NFT {
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			ev := event
+			if i != 0 {
+				//we only pay the fee once
+				ev.FeeAmount = ""
+				ev.FeeCurrency = ""
 			}
-			return entries, nil
+			ev.Label = "airdrop"
+			ev.ReceivedAmount = "1"
+			ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+			entries = append(entries, ev)
 		}
-	*/
+		return entries, nil
+	}
 
 	if scriptHash == "74b37352af81d750cb29f94e21ab449f09b2623e60a0074a75ac3f5aa09a10f7" || scriptHash == "a83c8ec471199a12b496f070ea6036962a49f9c1f7210ed01280ef1603deae71" {
 		//buy flovatarPack
@@ -651,7 +670,43 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	//we spend some funds and get X nfts back
+	if isZayTrade {
+
+		for _, nft := range entry.NFT {
+
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+
+			ev := event
+			ev.Label = "ZaySwap! NB Review!"
+			if nft.From == address {
+				ev.SentAmount = "1"
+				ev.SentCurrency = nftId
+			} else {
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = nftId
+			}
+			entries = append(entries, ev)
+		}
+
+		for _, ft := range entry.Tokens {
+			ev := event
+			ev.Label = "ZaySwap! NB Review!"
+
+			currency := ConvertCurrency(ft.Token)
+			if ft.Type == "Deposit" {
+				ev.SentCurrency = currency
+				ev.SentAmount = fmt.Sprintf("%v", ft.Amount)
+			} else {
+				ev.ReceivedAmount = fmt.Sprintf("%v", ft.Amount)
+				ev.ReceivedCurrency = currency
+			}
+			entries = append(entries, ev)
+		}
+
+		return entries, nil
+	}
+
 	if numberOfFTTransfers == 1 && numberOfNFTTransfers > 1 {
 		token := entry.Tokens[0]
 		eachSum := token.Amount / float64(len(entry.NFT))
@@ -682,10 +737,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 					ev.FeeAmount = ""
 					ev.FeeCurrency = ""
 				}
-				nftId, err := state.GetNFTID(eventName, fmt.Sprint(nft.Id))
-				if err != nil {
-					return nil, err
-				}
+				nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 				ev.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 				ev.ReceivedCurrency = ConvertCurrency(token.Token)
 				ev.SentAmount = "1"
@@ -761,8 +813,10 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	}
 
 	if numberOfFTTransfers == 3 {
+
 		//DEFI stuff
-		return nil, nil
+		//TODO: fix
+		return nil, nil //fmt.Errorf("defi")
 	}
 
 	litter.Dump(entry)
@@ -781,6 +835,7 @@ func ConvertCurrency(currency string) string {
 		"A.0f9df91c9121c460.BloctoToken":           "ID:35927",
 		"A.cfdd90d4a00f7b5b.TeleportedTetherToken": "USDT",
 		"A.142fa6570b62fd97.StarlyToken":           "ID:773411",
+		"A.c6c77b9f5c7a378f.FlowSwapPair":          "NULL1",
 	}
 	return currencyMap[currency]
 

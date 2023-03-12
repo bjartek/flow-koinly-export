@@ -11,16 +11,19 @@ import (
 	"github.com/sanity-io/litter"
 )
 
-//TODO: found bug where I am not getting all nft/token transfers... this bloody api...
+// TODO: found bug where I am not getting all nft/token transfers... this bloody api...
 func main() {
 
-	//	accountId := "0x886f3aeaf848c535"
+	//accountId := "0xdf868d4de6d2e0ab"
+	//me
+	accountId := "0x886f3aeaf848c535"
 	//accountId := "0x8e1231b8b045cf96"
-	accountId := "0x5b64854c16a96267"
+	//accountId := "0x5b64854c16a96267"
+	//c3
+	//accountId := "0x16ae8f1cbfceaa9e"
 
 	outputFile := fmt.Sprintf("%s.csv", accountId)
 
-	//accountId := "0xdf868d4de6d2e0ab"
 	ctx := context.Background()
 
 	state := koinly.NewKoinlyState()
