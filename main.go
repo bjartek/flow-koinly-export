@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bjartek/flow-koinly-export/pkg/core"
 	"github.com/bjartek/flow-koinly-export/pkg/flowgraph"
 	"github.com/bjartek/flow-koinly-export/pkg/koinly"
 	"github.com/sanity-io/litter"
@@ -22,39 +23,31 @@ func main() {
 	//c3
 	//accountId := "0x16ae8f1cbfceaa9e"
 
+	stateFile := fmt.Sprintf("%s.json", accountId)
 	outputFile := fmt.Sprintf("%s.csv", accountId)
 
 	ctx := context.Background()
 
 	state := koinly.NewKoinlyState()
-	result, err := flowgraph.GetAccountTransfers(ctx, accountId)
-	if err != nil {
-		panic(err)
+
+	//we try to fetch the old state file so that we do not have to fetch all interactions from flowgraph again
+	bytes, err := os.ReadFile(stateFile)
+	if err == nil {
+		var oldState core.State
+		err = json.Unmarshal(bytes, &oldState)
+		if err != nil {
+			panic(err)
+		}
+		state.RawEntries = oldState.RawEntries
+		state.ManualPrices = oldState.ManualPrices
+
+	} else {
+		result, err := flowgraph.GetAccountTransfers(ctx, accountId)
+		if err != nil {
+			panic(err)
+		}
+		state.RawEntries = result
 	}
-
-	state.RawEntries = result
-
-	/*
-		bytes, err := json.MarshalIndent(state, "", "  ")
-		if err != nil {
-			panic(err)
-		}
-
-		err = os.WriteFile("state.json", bytes, 0644)
-		if err != nil {
-			panic(err)
-		}
-
-		bytes, err := os.ReadFile("state.json")
-		if err != nil {
-			panic(err)
-		}
-		var state core.State
-		err = json.Unmarshal(bytes, &state)
-		if err != nil {
-			panic(err)
-		}
-	*/
 
 	//Here we can Unmarshal state so that we do not have to fetch it down every time
 	entires := []koinly.Event{}
@@ -67,12 +60,12 @@ func main() {
 		entires = append(entires, entry...)
 	}
 
-	bytes, err := json.MarshalIndent(state, "", "  ")
+	bytes2, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.WriteFile(fmt.Sprintf("%s.json", accountId), bytes, 0644)
+	err = os.WriteFile(fmt.Sprintf("%s.json", accountId), bytes2, 0644)
 	if err != nil {
 		panic(err)
 	}

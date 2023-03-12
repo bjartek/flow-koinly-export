@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -13,11 +12,17 @@ type Event struct {
 	Fields map[string]interface{}
 }
 
-//TODO: if the user has paid a fee here extract it out and put it here
+// TODO: if the user has paid a fee here extract it out and put it here
 type Entry struct {
 	Transaction Transaction
 	NFT         []NFTTransfer
 	Tokens      []TokenTransfer
+}
+
+func (self *Entry) HasEvent(event string) bool {
+	return lo.ContainsBy(self.Transaction.Events, func(e Event) bool {
+		return e.Name == event
+	})
 }
 
 type TokenTransfer struct {
@@ -43,11 +48,17 @@ type Transaction struct {
 	Arguments  []string
 }
 
+type Price struct {
+	Amount float64
+	Type   string
+}
+
 type State struct {
 	Packs           *Packs
 	CompositeStatus *CompositeStatus
 	NFTMappings     *NFTId
 	RawEntries      []Entry
+	ManualPrices    map[string]Price
 }
 
 func (self *State) HasNFTID(contract, id string) bool {
@@ -163,7 +174,7 @@ func (self *NFTId) Get(typ string, id string) (string, error) {
 	if ok {
 		return GenerateTextId(value), nil
 	}
-	return "", errors.New(fmt.Sprintf("Could not find nft mapping with key=%s", key))
+	return "", fmt.Errorf("Could not find nft mapping with key=%s", key)
 }
 
 func GenerateTextId(value int) string {

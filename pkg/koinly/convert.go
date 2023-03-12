@@ -6,7 +6,6 @@ import (
 
 	"github.com/bjartek/flow-koinly-export/pkg/core"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"github.com/sanity-io/litter"
 	"golang.org/x/exp/slices"
 )
@@ -42,6 +41,8 @@ const NameVersusArt = "A.d796ff17107bbff6.Art.NFT"
 const NameFlovatarNFT = "A.921ea449dffec68a.Flovatar.NFT"
 const NameBl0xPack = "A.7620acf6d7f2468a.Bl0xPack.NFT"
 const ZayTraderEvent = "A.4c577a03bc1a82e0.ZayTraderV2.TradeExecuted"
+const UnstakeEvent = "A.8624b52f9ddcd04a.FlowIDTableStaking.DelegatorUnstakedTokensWithdrawn"
+const VersusBid = "A.d796ff17107bbff6.Versus.Bid"
 
 // atm this just converts if there are FT involved or not
 func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
@@ -76,26 +77,25 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		FeeCurrency: feeCurrency,
 	}
 
-	isZayTrade := lo.ContainsBy(entry.Transaction.Events, func(e core.Event) bool {
-		return e.Name == ZayTraderEvent
-	})
-
 	ftSend := []core.TokenTransfer{}
 	ftReceived := []core.TokenTransfer{}
 	for _, t := range entry.Tokens {
 		if t.Type == "Deposit" {
 			ftReceived = append(ftReceived, t)
+		} else {
+			ftSend = append(ftSend, t)
 		}
-		ftSend = append(ftSend, t)
 	}
-	nftSend := []core.NFTTransfer{}
-	nftReceived := []core.NFTTransfer{}
-	for _, t := range entry.NFT {
-		if t.To == address {
-			nftReceived = append(nftReceived, t)
+	/*
+		nftSend := []core.NFTTransfer{}
+		nftReceived := []core.NFTTransfer{}
+		for _, t := range entry.NFT {
+			if t.To == address {
+				nftReceived = append(nftReceived, t)
+			}
+			nftSend = append(nftSend, t)
 		}
-		nftSend = append(nftSend, t)
-	}
+	*/
 
 	numberOfFTTransfers := len(entry.Tokens)
 	numberOfNFTTransfers := len(entry.NFT)
@@ -128,8 +128,37 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 	}
 
+	if entry.HasEvent(VersusBid) {
+		return nil, nil
+	}
+
+	if entry.HasEvent("A.d796ff17107bbff6.Marketplace.SaleWithdrawn") {
+		return nil, nil
+	}
+
 	if slices.Contains(ignoreHashes, scriptHash) {
 		return nil, nil
+	}
+
+	if scriptHash == "ec6b4bb9061ab50b347177c50046ce71d1a3841a062dac1fb2f5082d2dddc732" {
+		for _, nft := range entry.NFT {
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+
+			ev := event
+			ev.ReceivedAmount = "1"
+			ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+
+			price, ok := state.ManualPrices[ev.ReceivedCurrency]
+			if !ok {
+				litter.Dump(entry)
+				panic("Cannot find price of versus, look up on webpage")
+			}
+			ev.SentCurrency = ConvertCurrency(price.Type)
+			ev.SentAmount = fmt.Sprintf("%v", price.Amount)
+			ev.Label = "Trade"
+			entries = append(entries, ev)
+		}
+		return entries, nil
 	}
 
 	if scriptHash == "2a1e7927441136c24b1eadcb316abc96c8b32faf403c6bf2d5e412e3e71bf51a" {
@@ -290,13 +319,20 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 		packPrice, _ := state.GetPack(packId)
 		amountPerEntry := packPrice.Amount / float64(len(entry.NFT))
+
+		ev := event
+		ev.Label = "Cost"
+		ev.SentCurrency = packId
+		ev.SentAmount = "1"
+
+		entries = append(entries, ev)
+
 		for _, nft := range entry.NFT {
 
 			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
 			nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 			ev := event
-			//TODO: Pretty sure I am calculating gains here twice
-			ev.Label = "Swap"
+			ev.Label = "Gift"
 			ev.ReceivedAmount = "1"
 			ev.ReceivedCurrency = nftId
 			ev.SentCurrency = ConvertCurrency(packPrice.Currency)
@@ -460,15 +496,29 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				ev := event
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = state.AddNFTID(NameVersusArt, nft.Id)
-				ev.Description = fmt.Sprintf("%s lookup drop to find price https://versus.acution/drops/%s ", ev.Description, entry.Transaction.Arguments[0])
+
+				price, ok := state.ManualPrices[ev.ReceivedCurrency]
+				if !ok {
+					ev.Description = fmt.Sprintf("%s lookup drop to find price https://versus.acution/drops/%s add to ManualPrices in json file and rerun", ev.Description, entry.Transaction.Arguments[0])
+				} else {
+					ev.SentCurrency = ConvertCurrency(price.Type)
+					ev.SentAmount = fmt.Sprintf("%v", price.Amount)
+					ev.Label = "Trade"
+				}
+
 				entries = append(entries, ev)
 			}
 		}
 		return entries, nil
 	}
 
+	rewardTransations := []string{
+		"4968e16ef6c4b0fa5a16a321f3aaee98f202fe0f38759178d928a921fecd6ac4",
+		"a8e34487a5ebb460fb05dbcfb06e7f00b5dbe5e41462ddcbfd550e078a87d8f0",
+		"94307b30f39676396ac48f618c602c709b349e9c8166c6caecf97ca9511c84dd",
+	}
 	//This should be generalized to only check the label type against a scriptHash, since the logic is the same for other tx of the same pattern
-	if scriptHash == "4968e16ef6c4b0fa5a16a321f3aaee98f202fe0f38759178d928a921fecd6ac4" || scriptHash == "a8e34487a5ebb460fb05dbcfb06e7f00b5dbe5e41462ddcbfd550e078a87d8f0" {
+	if slices.Contains(rewardTransations, scriptHash) || entry.HasEvent(UnstakeEvent) {
 		token := entry.Tokens[0]
 		event.Label = "reward"
 		event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
@@ -476,40 +526,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		entries = append(entries, event)
 		return entries, nil
 	}
-
-	/*
-		if scriptHash == "c2080352d0b3a813a73f9d48b94e4371aef10a20416da310c0ecb3b69dc8acf8" {
-			//FindPack buy
-
-			if numberOfFTTransfers == 0 {
-				//we got airdropped a pack so it is worth nothing for us, handle it in open pack
-				return nil, nil
-			}
-
-			token := entry.Tokens[0]
-			sumPerPack := token.Amount / float64(len(entry.NFT))
-
-			for i, nft := range entry.NFT {
-				ev := event
-
-				if i != 0 {
-					ev.FeeAmount = ""
-					ev.FeeCurrency = ""
-				}
-				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-				ev.Label = "Trade"
-				ev.ReceivedAmount = "1"
-				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
-				ev.SentAmount = fmt.Sprintf("%v", sumPerPack)
-				ev.SentCurrency = ConvertCurrency(token.Token)
-				state.AddPack(ev.ReceivedCurrency, sumPerPack, token.Token)
-
-				entries = append(entries, ev)
-			}
-			return entries, nil
-
-		}
-	*/
 
 	if scriptHash == "27c50fc75f5a8812748ed3cc39dacde12236012580e681c23bded52979defb5d" {
 		//Bl0xPack  redeem lots of duplication from below
@@ -637,8 +653,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	//if scriptHash == "1ad96e0b57fb2a4fe61daa778111e2ce6eb84214bd915065b4e0f23ffedfa4f0" {
-	//can we just do this here?
 	if numberOfNFTTransfers > 0 && numberOfFTTransfers == 0 {
 		//airdrops
 		for i, nft := range entry.NFT {
@@ -669,7 +683,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
-	if isZayTrade {
+	if entry.HasEvent(ZayTraderEvent) {
 
 		for _, nft := range entry.NFT {
 
@@ -811,8 +825,12 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
+	//2021-07-16 09:28:18.274174 +0000 UTC,58.82237363,ID:7961,0.00212986,NULL1,,,defi,url=https://f.dnz.dev/0bef8ec7385e841910f6541cfaa393ffeb50cec9c16ce812ee71bfa7b0f11338 script=53b40a79e78df2ceabf4e3cab0e752615d2ce633d79ea633535bed901e456205,0bef8ec7385e841910f6541cfaa393ffeb50cec9c16ce812ee71bfa7b0f11338
+	//2021-07-16 09:28:18.274174 +0000 UTC,0.00425972,NULL1,0.00212986,NULL1,,,defi,url=https://f.dnz.dev/0bef8ec7385e841910f6541cfaa393ffeb50cec9c16ce812ee71bfa7b0f11338 script=53b40a79e78df2ceabf4e3cab0e752615d2ce633d79ea633535bed901e456205,0bef8ec7385e841910f6541cfaa393ffeb50cec9c16ce812ee71bfa7b0f11338
+
 	if numberOfFTTransfers == 3 {
 
+		//litter.Dump(entry)
 		if len(ftSend) == 1 {
 			//we are sending 1 in and getting two back
 			amount := ftSend[0].Amount / 2
@@ -826,19 +844,19 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				ev.SentAmount = fmt.Sprintf("%v", amount)
 				entries = append(entries, ev)
 			}
-
 		} else {
 			amount := ftReceived[0].Amount / 2
 			for _, ft := range ftSend {
 				ev := event
 				ev.Label = "defi"
-				ev.SentCurrency = ConvertCurrency(ft.Token)
-				ev.SentAmount = fmt.Sprintf("%v", ft.Amount)
 				ev.ReceivedCurrency = ConvertCurrency(ftReceived[0].Token)
 				ev.ReceivedAmount = fmt.Sprintf("%v", amount)
+				ev.SentCurrency = ConvertCurrency(ft.Token)
+				ev.SentAmount = fmt.Sprintf("%v", ft.Amount)
 				entries = append(entries, ev)
 			}
 		}
+		//os.Exit(0)
 		return entries, nil
 	}
 
