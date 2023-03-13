@@ -47,7 +47,6 @@ const VersusBid = "A.d796ff17107bbff6.Versus.Bid"
 // atm this just converts if there are FT involved or not
 func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
 
-	//TODO: starly staking bug aaf2ac69a5ea03a24294e8545fcfc5010151ca81d16b815b3a1ffa03d2b6998a
 	//TODO; find names https://f.dnz.dev/39fe10d09d0457f9fc69c2148aa20fe1d435f218437ecc23e54551f415e13add
 
 	fee := ""
@@ -118,26 +117,37 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		"926cf83e0b0de6bb32291b93b1070fc98224686b3c6f7d7962d8fd287b98596b", //flovatar listed for sale new
 		"37b2f71c2376e4946229a5a5583e01229ee7dcb5d2fd96e21d5e021129cdad83", //charity mint
 		"80c607d3c993d6617fe023400356e9d2fb86bbde04f2d24595a0831da54757c0", //add keys
-		"4026b1968ec395b77d8b146db13c920814dff25ab4b90dfffffe578f78131bd9", //starly staking
 
 		//todo these below we can readd
 		"fcdd17efba950df4e45d8885eb983433d8833bcd042d4e9d67d91cad94abe948", //zay codes swap
-		"5e3e570f99de92bf0beec6c83273359d9cfa9c80a278a403b8283e24dd2d3248", //TODO: swapping pool see tx fd87d4d86e145e26f41d21955527b719bc29d3aaae9767561757d57c99b01c2c
-		"d0afe76af92b11ad43f26558ec3aecb1008a0429706aa8b6261ed08cc6b5f36b", //TODO: REVV defi tx b1bfb9b4c984625eeba828d55a37d0ffe146c1a32483fb4e93fce8ac1eddc953
-		"abcdf6bb2842402cedec581bed263c03454e53439ed02ccdc052350db1b940c9", //TODO: more defi flow/usdt 209311220240e10c871ed6e63cc52148ba6e3187df7b4852d41abc66a0ea867e
-		"dd217a2cb1aa7f4317bc4adc8cf1da6460915d2f36f411af783f9dbb71bd29b7", //TODO: more defi 5dfc4cc1b0721b4a54276b3dbdce5ba851b60c3ca02fe55218c27626fba9aff1
+		/*
+			"5e3e570f99de92bf0beec6c83273359d9cfa9c80a278a403b8283e24dd2d3248", //TODO: swapping pool see tx fd87d4d86e145e26f41d21955527b719bc29d3aaae9767561757d57c99b01c2c
+			"d0afe76af92b11ad43f26558ec3aecb1008a0429706aa8b6261ed08cc6b5f36b", //TODO: REVV defi tx b1bfb9b4c984625eeba828d55a37d0ffe146c1a32483fb4e93fce8ac1eddc953
+			"abcdf6bb2842402cedec581bed263c03454e53439ed02ccdc052350db1b940c9", //TODO: more defi flow/usdt 209311220240e10c871ed6e63cc52148ba6e3187df7b4852d41abc66a0ea867e
+			"dd217a2cb1aa7f4317bc4adc8cf1da6460915d2f36f411af783f9dbb71bd29b7", //TODO: more defi 5dfc4cc1b0721b4a54276b3dbdce5ba851b60c3ca02fe55218c27626fba9aff1
+		*/
+		"04891a8318d2fb7635fa8ed1e9e4b3854ba433055b78e6f9dedce91c76c87f81", //starly stake
 
 	}
 
+	if slices.Contains(ignoreHashes, scriptHash) {
+		return nil, nil
+	}
 	if entry.HasEvent(VersusBid) {
 		return nil, nil
 	}
 
-	if entry.HasEvent("A.d796ff17107bbff6.Marketplace.SaleWithdrawn") {
-		return nil, nil
+	//starly staking
+	if scriptHash == "626b785aa04addc1bdcde5186428c87e9bf12a9a14c5eb1c70210bf87d80ed40" || scriptHash == "4026b1968ec395b77d8b146db13c920814dff25ab4b90dfffffe578f78131bd9" { //starly staking
+		token := entry.Tokens[0]
+		event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
+		event.ReceivedCurrency = ConvertCurrency(token.Token)
+		event.Label = "Reward"
+		entries = append(entries, event)
+		return entries, nil
 	}
 
-	if slices.Contains(ignoreHashes, scriptHash) {
+	if entry.HasEvent("A.d796ff17107bbff6.Marketplace.SaleWithdrawn") {
 		return nil, nil
 	}
 
@@ -301,14 +311,17 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		//buy flovatarPack
 
 		//what do we do with packs that you bought but have not opened?
+		//let just skip the pack and keep the cost for when we open
 		token := entry.Tokens[0]
-		event.Label = "Trade"
-		event.SentAmount = fmt.Sprintf("%v", token.Amount)
-		event.SentCurrency = ConvertCurrency(token.Token)
-		event.ReceivedAmount = "1"
-		event.ReceivedCurrency = state.AddNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[1])
+		/*
+				event.Label = "Trade"
+				event.SentAmount = fmt.Sprintf("%v", token.Amount)
+				event.SentCurrency = ConvertCurrency(token.Token)
+				event.ReceivedAmount = "1"
+				event.ReceivedCurrency = state.AddNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[1])
+			entries = append(entries, event)
+		*/
 		state.AddPack(event.ReceivedCurrency, token.Amount, token.Token)
-		entries = append(entries, event)
 		return entries, nil
 	}
 
@@ -321,19 +334,21 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		packPrice, _ := state.GetPack(packId)
 		amountPerEntry := packPrice.Amount / float64(len(entry.NFT))
 
-		ev := event
-		ev.Label = "Gift"
-		ev.SentCurrency = packId
-		ev.SentAmount = "1"
+		/*
+			//we do not have a pack nft so we do not have to do anything here
+			ev := event
+			ev.Label = "Gift"
+			ev.SentCurrency = packId
+			ev.SentAmount = "1"
 
-		entries = append(entries, ev)
+			entries = append(entries, ev)
+		*/
 
 		for _, nft := range entry.NFT {
 
 			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
 			nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 			ev := event
-			ev.Label = "Gift"
 			ev.ReceivedAmount = "1"
 			ev.ReceivedCurrency = nftId
 			ev.SentCurrency = ConvertCurrency(packPrice.Currency)
@@ -791,16 +806,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			event.SentCurrency = nftId
 		}
 
-		entries = append(entries, event)
-		return entries, nil
-	}
-
-	//starly staking
-	if scriptHash == "626b785aa04addc1bdcde5186428c87e9bf12a9a14c5eb1c70210bf87d80ed40" {
-		token := entry.Tokens[0]
-		event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
-		event.ReceivedCurrency = ConvertCurrency(token.Token)
-		event.Label = "Reward"
 		entries = append(entries, event)
 		return entries, nil
 	}
