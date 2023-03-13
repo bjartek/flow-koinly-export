@@ -41,7 +41,9 @@ func main() {
 		state.RawEntries = oldState.RawEntries
 		state.ManualPrices = oldState.ManualPrices
 
-	} else {
+	}
+
+	if len(state.RawEntries) == 0 {
 		result, err := flowgraph.GetAccountTransfers(ctx, accountId)
 		if err != nil {
 			panic(err)

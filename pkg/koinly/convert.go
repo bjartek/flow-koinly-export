@@ -118,6 +118,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		"926cf83e0b0de6bb32291b93b1070fc98224686b3c6f7d7962d8fd287b98596b", //flovatar listed for sale new
 		"37b2f71c2376e4946229a5a5583e01229ee7dcb5d2fd96e21d5e021129cdad83", //charity mint
 		"80c607d3c993d6617fe023400356e9d2fb86bbde04f2d24595a0831da54757c0", //add keys
+		"4026b1968ec395b77d8b146db13c920814dff25ab4b90dfffffe578f78131bd9", //starly staking
 
 		//todo these below we can readd
 		"fcdd17efba950df4e45d8885eb983433d8833bcd042d4e9d67d91cad94abe948", //zay codes swap
@@ -321,7 +322,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		amountPerEntry := packPrice.Amount / float64(len(entry.NFT))
 
 		ev := event
-		ev.Label = "Cost"
+		ev.Label = "Gift"
 		ev.SentCurrency = packId
 		ev.SentAmount = "1"
 
@@ -790,6 +791,16 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			event.SentCurrency = nftId
 		}
 
+		entries = append(entries, event)
+		return entries, nil
+	}
+
+	//starly staking
+	if scriptHash == "626b785aa04addc1bdcde5186428c87e9bf12a9a14c5eb1c70210bf87d80ed40" {
+		token := entry.Tokens[0]
+		event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
+		event.ReceivedCurrency = ConvertCurrency(token.Token)
+		event.Label = "Reward"
 		entries = append(entries, event)
 		return entries, nil
 	}
