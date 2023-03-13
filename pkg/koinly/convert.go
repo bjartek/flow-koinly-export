@@ -137,6 +137,32 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return nil, nil
 	}
 
+	if scriptHash == "2b26cb7784ee28b5747d3a04cff60ca3f9ae93cf555eca3d4b7572b54eb75f46" {
+		//versus marketplace
+
+		event.Label = "Trade"
+		token := entry.Tokens[0]
+		id := entry.Transaction.Arguments[1]
+
+		if token.Type == "Withdraw" {
+			nftId := state.AddNFTID(NameVersusArt, id)
+			event.SentAmount = fmt.Sprintf("%v", token.Amount)
+			event.SentCurrency = ConvertCurrency(token.Token)
+			event.ReceivedAmount = "1"
+			event.ReceivedCurrency = nftId
+
+		} else if token.Type == "Deposit" {
+			//some versus is not there
+			nftId := state.AddNFTID(NameVersusArt, id)
+			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
+			event.ReceivedCurrency = ConvertCurrency(token.Token)
+			event.SentAmount = "1"
+			event.SentCurrency = nftId
+		}
+		entries = append(entries, event)
+		return entries, nil
+	}
+
 	//starly staking
 	if scriptHash == "626b785aa04addc1bdcde5186428c87e9bf12a9a14c5eb1c70210bf87d80ed40" || scriptHash == "4026b1968ec395b77d8b146db13c920814dff25ab4b90dfffffe578f78131bd9" { //starly staking
 		token := entry.Tokens[0]
@@ -457,32 +483,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 
 	}
-	if scriptHash == "2b26cb7784ee28b5747d3a04cff60ca3f9ae93cf555eca3d4b7572b54eb75f46" {
-		//versus marketplace
-
-		event.Label = "Trade"
-		token := entry.Tokens[0]
-		id := entry.Transaction.Arguments[1]
-
-		if token.Type == "Withdraw" {
-			nftId := state.AddNFTID(NameVersusArt, id)
-			event.SentAmount = fmt.Sprintf("%v", token.Amount)
-			event.SentCurrency = ConvertCurrency(token.Token)
-			event.ReceivedAmount = "1"
-			event.ReceivedCurrency = nftId
-
-		} else if token.Type == "Deposit" {
-			//some versus is not there
-			nftId := state.AddNFTID(NameVersusArt, id)
-			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
-			event.ReceivedCurrency = ConvertCurrency(token.Token)
-			event.SentAmount = "1"
-			event.SentCurrency = nftId
-		}
-		entries = append(entries, event)
-		return entries, nil
-	}
-
 	if scriptHash == "cc36a9819d06d40062b621ec505d97ebd9238d9e096cdd2a4b84a3fd1e1df5e5" {
 		/*
 			//TODO: for the old pattern we have to keep track of bids...
