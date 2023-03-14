@@ -17,11 +17,11 @@ func main() {
 
 	//accountId := "0xdf868d4de6d2e0ab"
 	//me
-	accountId := "0x886f3aeaf848c535"
+	//accountId := "0x886f3aeaf848c535"
 	//accountId := "0x8e1231b8b045cf96"
 	//accountId := "0x5b64854c16a96267"
-	//c3
-	//accountId := "0x16ae8f1cbfceaa9e"
+
+	accountId := "0x16ae8f1cbfceaa9e" //c3
 	//accountId := "0x4cc9e8bc47622870" //hichana
 
 	stateFile := fmt.Sprintf("%s.json", accountId)
