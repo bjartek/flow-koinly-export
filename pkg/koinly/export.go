@@ -1,7 +1,6 @@
 package koinly
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -46,7 +45,7 @@ func Marshal(events []Event, fileName string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(csvContent)
+	//fmt.Println(csvContent)
 
 	bytes := []byte(csvContent)
 	err = os.WriteFile(fileName, bytes, 0644)
