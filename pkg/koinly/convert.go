@@ -69,7 +69,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	event := Event{
 		Date:        t,
 		TxHash:      entry.Transaction.Hash,
-		Description: fmt.Sprintf("script=%s\n", scriptHash),
+		Description: fmt.Sprintf("script=%s", scriptHash),
 		FeeAmount:   fee,
 		FeeCurrency: feeCurrency,
 	}
@@ -137,7 +137,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		if token.Type == "Withdraw" {
 			nftId := state.AddNFTID(NameVersusArt, id)
 
-			event.Description = fmt.Sprintf("versus buy \n%s nft==%s-%s", event.Description, NameVersusArt, id)
+			event.Description = fmt.Sprintf("versus buy %s nft=%s-%s", event.Description, NameVersusArt, id)
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
 			event.SentCurrency = ConvertCurrency(token.Token)
 			event.ReceivedAmount = "1"
@@ -145,7 +145,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 		} else if token.Type == "Deposit" {
 			//some versus is not there
-			event.Description = fmt.Sprintf("versus sell \n%s nft==%s-%s", event.Description, NameVersusArt, id)
+			event.Description = fmt.Sprintf("versus sell %s nft==%s-%s", event.Description, NameVersusArt, id)
 			nftId := state.AddNFTID(NameVersusArt, id)
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
@@ -178,7 +178,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev := event
 			ev.ReceivedAmount = "1"
 			ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
-			ev.Description = fmt.Sprintf("versus setle \n%s nft==%s-%s", event.Description, NameVersusArt, nft.Id)
+			ev.Description = fmt.Sprintf("versus setle %s nft==%s-%s", event.Description, NameVersusArt, nft.Id)
 
 			price, ok := state.ManualPrices[ev.ReceivedCurrency]
 			if !ok {
@@ -249,7 +249,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			//we have to have the NFTID for this component already if not something is wrong
 			componentId := state.AddNFTID(eventName, nft.Id)
 
-			ev.Description = fmt.Sprintf("flovatar create \n%s nft=%s-%s", event.Description, eventName, nft.Id)
+			ev.Description = fmt.Sprintf("flovatar create %s nft=%s-%s", event.Description, eventName, nft.Id)
 			ev.Label = "Swap"
 			ev.SentAmount = "1"
 			ev.SentCurrency = componentId
@@ -296,7 +296,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				present := state.RemoveCompositeComponent(flovatar, componentId)
 				if !present {
 					ev := event
-					ev.Description = fmt.Sprintf("flovatar add new component from bought nft \n%s nft=%s-%s", event.Description, eventName, nft.Id)
+					ev.Description = fmt.Sprintf("flovatar add new component from bought nft %s nft=%s-%s", event.Description, eventName, nft.Id)
 					ev.Label = "gift"
 					ev.ReceivedAmount = "1"
 					ev.ReceivedCurrency = componentId
@@ -325,7 +325,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev.ReceivedAmount = "1"
 			ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 
-			ev.Description = fmt.Sprintf("goober minted \n%s nft=%s-%s", event.Description, eventName, nft.Id)
+			ev.Description = fmt.Sprintf("goober minted %s nft=%s-%s", event.Description, eventName, nft.Id)
 			entries = append(entries, ev)
 		}
 		return entries, nil
@@ -341,7 +341,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		eventName := "A.921ea449dffec68a.FlovatarPack"
 		nftId := entry.Transaction.Arguments[1]
 		event.ReceivedCurrency = state.AddNFTID(eventName, nftId)
-		event.Description = fmt.Sprintf("buy flovatar pack \n%s nft=%s-%s", event.Description, eventName, nftId)
+		event.Description = fmt.Sprintf("buy flovatar pack %s nft=%s-%s", event.Description, eventName, nftId)
 		entries = append(entries, event)
 
 		return entries, nil
@@ -366,7 +366,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev.Label = "Swap"
 			ev.ReceivedAmount = "1"
 			ev.ReceivedCurrency = nftId
-			ev.Description = fmt.Sprintf("open flovatar pack \n%s nft=%s-%s", event.Description, eventName, nft.Id)
+			ev.Description = fmt.Sprintf("open flovatar pack %s nft=%s-%s", event.Description, eventName, nft.Id)
 			ev.SentCurrency = packId
 			ev.SentAmount = fmt.Sprintf("%f", amountOfPackPerEntry)
 
@@ -402,14 +402,14 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev.SentCurrency = ConvertCurrency(token.Token)
 			ev.ReceivedAmount = "1"
 			ev.ReceivedCurrency = nftId
-			ev.Description = fmt.Sprintf("buy flovatar \n%s nft=%s-%s", event.Description, eventName, id)
+			ev.Description = fmt.Sprintf("buy flovatar %s nft=%s-%s", event.Description, eventName, id)
 
 		} else if token.Type == "Deposit" {
 			nftId, err := state.GetNFTID(eventName, id)
 			if err != nil {
 				return nil, err
 			}
-			ev.Description = fmt.Sprintf("sell flovatar \n%s nft=%s-%s", event.Description, eventName, id)
+			ev.Description = fmt.Sprintf("sell flovatar %s nft=%s-%s", event.Description, eventName, id)
 			ev.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			ev.ReceivedCurrency = ConvertCurrency(token.Token)
 			ev.SentAmount = "1"
@@ -460,7 +460,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		event.Label = "Trade"
 		if token.Type == "Withdraw" {
 			nftId := state.AddNFTID(eventName, id)
-			event.Description = fmt.Sprintf("buy flovatar component \n%s nft=%s-%s", event.Description, eventName, id)
+			event.Description = fmt.Sprintf("buy flovatar component %s nft=%s-%s", event.Description, eventName, id)
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
 			event.SentCurrency = ConvertCurrency(token.Token)
 			event.ReceivedAmount = "1"
@@ -471,7 +471,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			if err != nil {
 				return nil, err
 			}
-			event.Description = fmt.Sprintf("sell flovatar component \n%s nft=%s-%s", event.Description, eventName, id)
+			event.Description = fmt.Sprintf("sell flovatar component %s nft=%s-%s", event.Description, eventName, id)
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
 			event.SentAmount = "1"
@@ -493,7 +493,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				ev := event
 				ev.Label = "Trade"
 				ev.SentAmount = price
-				ev.Description = fmt.Sprintf("versus settle \n%s nft=%s-%s", event.Description, NameVersusArt, artId)
+				ev.Description = fmt.Sprintf("versus settle %s nft=%s-%s", event.Description, NameVersusArt, artId)
 				ev.SentCurrency = ConvertCurrency("A.1654653399040a61.FlowToken")
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = nftId
@@ -512,7 +512,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 					ev.Description = fmt.Sprintf("%s lookup drop to find price https://versus.acution/drops/%s add to ManualPrices in json file and rerun", ev.Description, entry.Transaction.Arguments[0])
 				} else {
 
-					ev.Description = fmt.Sprintf("versus settle \n%s nft=%s-%s", event.Description, NameVersusArt, nft.Id)
+					ev.Description = fmt.Sprintf("versus settle %s nft=%s-%s", event.Description, NameVersusArt, nft.Id)
 					ev.SentCurrency = ConvertCurrency(price.Type)
 					ev.SentAmount = fmt.Sprintf("%v", price.Amount)
 					ev.Label = "Trade"
@@ -705,11 +705,12 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev.Label = "Swap"
 			ev.Description = fmt.Sprintf("%s Zay swap, please review nft=%s-%s", ev.Description, eventName, nft.Id)
 			if nft.From == address {
-				ev.SentAmount = "1"
-				ev.SentCurrency = nftId
-			} else {
+
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = nftId
+			} else {
+				ev.SentAmount = "1"
+				ev.SentCurrency = nftId
 			}
 			entries = append(entries, ev)
 		}
@@ -721,11 +722,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev.Label = "Swap"
 			currency := ConvertCurrency(ft.Token)
 			if ft.Type == "Deposit" {
-				ev.SentCurrency = currency
-				ev.SentAmount = fmt.Sprintf("%v", ft.Amount)
-			} else {
 				ev.ReceivedAmount = fmt.Sprintf("%v", ft.Amount)
 				ev.ReceivedCurrency = currency
+			} else {
+				ev.SentCurrency = currency
+				ev.SentAmount = fmt.Sprintf("%v", ft.Amount)
 			}
 			entries = append(entries, ev)
 		}
