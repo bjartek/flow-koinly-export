@@ -2,6 +2,7 @@ package koinly
 
 import (
 	"fmt"
+	"math"
 	"os"
 
 	"github.com/bjartek/flow-koinly-export/pkg/core"
@@ -220,7 +221,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		}
 
 		numberOfComponentsBurned := len(destroyedIds)
-		amountPerComponent := 1.0 / float64(numberOfComponentsBurned)
+		amountPerComponent := roundFloat(1.0/float64(numberOfComponentsBurned), 6)
 
 		flovatarId := ""
 
@@ -358,17 +359,20 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		//open flovatar pack
 
 		packId := state.AddNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[0])
-		amountOfPackPerEntry := 1.0 / float64(len(entry.NFT))
+		amountOfPackPerEntry := roundFloat(1.0/float64(len(entry.NFT)), 6)
 
 		totalAmount := 0.0
 		for i, nft := range entry.NFT {
 
+			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 			if i+1 == len(entry.NFT) {
 				amountOfPackPerEntry = 1.0 - totalAmount
 			}
+			if packId == "NFT232" {
+				fmt.Println(i, amountOfPackPerEntry)
+			}
 
-			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-			nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 			ev := event
 			ev.Label = "swap"
 			ev.ReceivedAmount = "1"
@@ -690,7 +694,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		}
 
 		numberOfMoments := len(moments)
-		amountPerMoment := 1.0 / float64(numberOfMoments)
+		amountPerMoment := roundFloat(1.0/float64(numberOfMoments), 6)
 
 		totalAmount := 0.0
 		for i, nft := range moments {
@@ -946,4 +950,9 @@ func ConvertCurrency(currency string) string {
 	}
 	return currencyMap[currency]
 
+}
+
+func roundFloat(val float64, precision uint) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
 }
