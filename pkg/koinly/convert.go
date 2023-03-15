@@ -211,7 +211,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return nil, nil
 	}
 
-	if scriptHash == "d6cfd4842774c0618f209cfc6d5d17217464ed685fc9506ba16e890a6b1340ed" {
+	if scriptHash == "d6cfd4842774c0618f209cfc6d5d17217464ed685fc9506ba16e890a6b1340ed" || scriptHash == "57734f9139412821d010953c4d6ed4d36417b87cfe1d78b885a65cd9540c20ee" {
 		//flovatar create
 
 		destroyedIds := []string{}
@@ -295,6 +295,8 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		"bcf4800902a1cdccbae4966b32f728c036a8e82e97dd477bc4e44e9ad1ff8d23",
 		"0f8879f814e28abe0e38101d1865a0b05cf8fa59baa362b12c541409caff7e11", //flovatar attach background
 		"2206353dc476ab1fadec47fe1ea083a66bb0ec72e88f976a09aaeea2484b1f80", //eyes //attach glasses
+		"1ac1ba13f36019778edabf7a07c506c960f7d152cfa2c0768cda3949b29ba9d9", //
+		"12b679e933a87dc8690b2f21fbfb4545192fe433513cb3a64d932fe4e992b7d8",
 		"c6102d85beef2cd305013b5aaa805faff6c31cf227e279d886cc1ff0b348af4b",
 		"3e700f41d78ea866cbd6cf90e75bc55f3aba32c57f1b4daf4665de754f74074a",
 		"86bb52678dd47d7abcc457e4cbc473f7b8c237c0a882fc950327adc992a8f564",                //hat
@@ -381,7 +383,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			ev.Label = "swap"
 			ev.ReceivedAmount = "1"
 			ev.ReceivedCurrency = nftId
-			ev.Description = fmt.Sprintf("open flovatar pack %s nft=%s-%s", event.Description, eventName, nft.Id)
+			ev.Description = fmt.Sprintf("open flovatar pack %s nft=%s-%s packid=%s", event.Description, eventName, nft.Id, entry.Transaction.Arguments[0])
 			ev.SentCurrency = packId
 			ev.SentAmount = fmt.Sprintf("%f", amountOfPackPerEntry)
 
@@ -450,8 +452,15 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		scriptHash == "25717e66e70730e00440b2b9e52b581021825241cb540e46c0aa5cf4a9514b58" || //blocto
 		scriptHash == "1f4921d504e24e11bd06e57feff2d6c3567893ab0e90aa6230b714d0dfad85aa" {
 		token := entry.Tokens[0]
-		event.SentAmount = fmt.Sprintf("%v", token.Amount)
-		event.SentCurrency = ConvertCurrency(token.Token)
+		if token.Type == "Deposit" {
+			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
+			event.ReceivedCurrency = ConvertCurrency(token.Token)
+		} else {
+
+			event.SentAmount = fmt.Sprintf("%v", token.Amount)
+			event.SentCurrency = ConvertCurrency(token.Token)
+
+		}
 		event.Description = fmt.Sprintf("ft gift %s counterparty=%s", event.Description, token.Counterparty)
 		entries = append(entries, event)
 		return entries, nil
@@ -748,11 +757,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				}
 				ev.SentAmount = "1"
 				ev.SentCurrency = nftId
-				ev.Description = fmt.Sprintf("airdrop %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, nft.To)
+				ev.Description = fmt.Sprintf("airdrop send %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, nft.To)
 			} else {
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
-				ev.Description = fmt.Sprintf("airdrop %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, nft.From)
+				ev.Description = fmt.Sprintf("airdrop receive %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, nft.From)
 			}
 			entries = append(entries, ev)
 		}
