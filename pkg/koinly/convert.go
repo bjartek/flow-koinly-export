@@ -119,6 +119,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		"80c607d3c993d6617fe023400356e9d2fb86bbde04f2d24595a0831da54757c0", //add keys
 		"e765cca2e07d6d14232bcd3924192051c8e50ab0c4c121dad508fa3652103a79", //jamb
 		"04891a8318d2fb7635fa8ed1e9e4b3854ba433055b78e6f9dedce91c76c87f81", //starly stake
+		"56577c71f6777e62acfaf931ea8d36aff405caefc0e359d927d68f742366edd1", //starly stake
 
 	}
 
@@ -747,11 +748,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				}
 				ev.SentAmount = "1"
 				ev.SentCurrency = nftId
-				ev.Description = fmt.Sprintf("airdrop %s counterparty=%s", event.Description, nft.To)
+				ev.Description = fmt.Sprintf("airdrop %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, nft.To)
 			} else {
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
-				ev.Description = fmt.Sprintf("airdrop %s counterparty=%s", event.Description, nft.From)
+				ev.Description = fmt.Sprintf("airdrop %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, nft.From)
 			}
 			entries = append(entries, ev)
 		}
