@@ -103,6 +103,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		//TODO consider saving as skipped
 		return nil, nil
 	}
+	//TODO: lending pool
 	ignoreHashes := []string{
 		//these can just be thrown away
 		"1f177b71729f1a54ce62ca64d246f38418c8fb78189a1b223be8be479e15a350", //delist flovatar
@@ -120,7 +121,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		"e765cca2e07d6d14232bcd3924192051c8e50ab0c4c121dad508fa3652103a79", //jamb
 		"04891a8318d2fb7635fa8ed1e9e4b3854ba433055b78e6f9dedce91c76c87f81", //starly stake
 		"56577c71f6777e62acfaf931ea8d36aff405caefc0e359d927d68f742366edd1", //starly stake
-
 	}
 
 	if slices.Contains(ignoreHashes, scriptHash) {
@@ -129,6 +129,9 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	if entry.HasEvent(VersusBid) {
 		return nil, nil
 	}
+
+	/*
+	 */
 
 	//TODO GOATS burn
 	//27cfd8fe40e1f9705a08c7ff0552b485346db8c50d6e2ec3728981f57b21c0db
@@ -367,28 +370,43 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	if scriptHash == "ecc73476640233932aefa6aed80688e877907968a27337cf35af0a3ee86c6d98" || scriptHash == "d0ec403b0c44a4936d563834bdb322734fa514fb7d6fcc60843a663116cf1724" {
 		//open flovatar pack
 
-		packId := state.AddNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[0])
-		amountOfPackPerEntry := roundFloat(1.0/float64(len(entry.NFT)), 6)
-
-		totalAmount := 0.0
-		for i, nft := range entry.NFT {
-
-			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
-			nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
-			if i+1 == len(entry.NFT) {
-				amountOfPackPerEntry = 1.0 - totalAmount
+		packId, err := state.GetNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[0])
+		//the pack
+		if err != nil {
+			for _, nft := range entry.NFT {
+				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+				nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+				ev := event
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = nftId
+				ev.Description = fmt.Sprintf("open flovatar airdopped pack %s nft=%s-%s packid=%s", event.Description, eventName, nft.Id, entry.Transaction.Arguments[0])
+				entries = append(entries, ev)
 			}
 
-			ev := event
-			ev.Label = "swap"
-			ev.ReceivedAmount = "1"
-			ev.ReceivedCurrency = nftId
-			ev.Description = fmt.Sprintf("open flovatar pack %s nft=%s-%s packid=%s", event.Description, eventName, nft.Id, entry.Transaction.Arguments[0])
-			ev.SentCurrency = packId
-			ev.SentAmount = fmt.Sprintf("%f", amountOfPackPerEntry)
+		} else {
 
-			entries = append(entries, ev)
-			totalAmount = totalAmount + amountOfPackPerEntry
+			amountOfPackPerEntry := roundFloat(1.0/float64(len(entry.NFT)), 6)
+
+			totalAmount := 0.0
+			for i, nft := range entry.NFT {
+
+				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+				nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+				if i+1 == len(entry.NFT) {
+					amountOfPackPerEntry = 1.0 - totalAmount
+				}
+
+				ev := event
+				ev.Label = "swap"
+				ev.ReceivedAmount = "1"
+				ev.ReceivedCurrency = nftId
+				ev.Description = fmt.Sprintf("open flovatar pack %s nft=%s-%s packid=%s", event.Description, eventName, nft.Id, entry.Transaction.Arguments[0])
+				ev.SentCurrency = packId
+				ev.SentAmount = fmt.Sprintf("%f", amountOfPackPerEntry)
+
+				entries = append(entries, ev)
+				totalAmount = totalAmount + amountOfPackPerEntry
+			}
 		}
 		return entries, nil
 	}
@@ -396,7 +414,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 	if scriptHash == "444817259dec224209b32f97e190ba4e980545ffa9561b6e59c80ddc1ba48952" || scriptHash == "7c254512fa53e57314cb9070c3557db276167276c758af19ada207da2cdd3ffd" {
 		//stake
 		token := entry.Tokens[0]
-
 		event.Label = "stake"
 		event.SentAmount = fmt.Sprintf("%v", token.Amount)
 		event.SentCurrency = ConvertCurrency(token.Token)
@@ -900,7 +917,12 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			event.Label = "income"
 		}
 
-		event.Description = fmt.Sprintf("1 ft %s counterparty=%s", event.Description, token.Counterparty)
+		description := "1f"
+		if scriptHash == "d586b5a4b87ecadda70c5a7ecf648bc9d8cc0a9c90ce8cabdb13a7730a0e1e86" || scriptHash == "5f34c5aef45c7d0dec76a42c841e8f6c015b19aa57f431f98c501940a4b7f6dc" {
+			description = "increment.fi redeem/supply"
+		}
+
+		event.Description = fmt.Sprintf("%s %s counterparty=%s", description, event.Description, token.Counterparty)
 		entries = append(entries, event)
 		return entries, nil
 	}
@@ -913,7 +935,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			if token.Type == "Withdraw" {
 				event.SentAmount = fmt.Sprintf("%v", token.Amount)
 				event.SentCurrency = ConvertCurrency(token.Token)
-			} else if token.Type == "Deposit" {
+			} else {
 				event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 				event.ReceivedCurrency = ConvertCurrency(token.Token)
 			}
