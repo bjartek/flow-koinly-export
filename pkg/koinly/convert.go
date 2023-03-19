@@ -473,10 +473,8 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			event.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			event.ReceivedCurrency = ConvertCurrency(token.Token)
 		} else {
-
 			event.SentAmount = fmt.Sprintf("%v", token.Amount)
 			event.SentCurrency = ConvertCurrency(token.Token)
-
 		}
 		event.Description = fmt.Sprintf("ft gift %s counterparty=%s", event.Description, token.Counterparty)
 		entries = append(entries, event)
@@ -997,8 +995,26 @@ func ConvertCurrency(currency string) string {
 		"A.cfdd90d4a00f7b5b.TeleportedTetherToken": "USDT",
 		"A.142fa6570b62fd97.StarlyToken":           "ID:773411",
 		"A.c6c77b9f5c7a378f.FlowSwapPair":          "NULL1",
+		"A.b19436aae4d94622.FiatToken":             "ID:3054", //we treat FUSD and USDC the same?
 	}
 	return currencyMap[currency]
+
+}
+
+func ConvertCurrencyDivly(currency string) string {
+	currencyMap := map[string]string{
+		"ID:7961":   "Flow",
+		"ID:35927":  "BLT",
+		"USDT":      "USDT",
+		"ID:773411": "Starly",
+		"NULL1":     "FlowSwapPair",
+		"ID:3054":   "USDC",
+	}
+	value, ok := currencyMap[currency]
+	if !ok {
+		return currency
+	}
+	return value
 
 }
 
