@@ -45,6 +45,7 @@ const NameBl0xPack = "A.7620acf6d7f2468a.Bl0xPack.NFT"
 const ZayTraderEvent = "A.4c577a03bc1a82e0.ZayTraderV2.TradeExecuted"
 const UnstakeEvent = "A.8624b52f9ddcd04a.FlowIDTableStaking.DelegatorUnstakedTokensWithdrawn"
 const VersusBid = "A.d796ff17107bbff6.Versus.Bid"
+const StarlyMarketBuy = "A.5b82f21c0edf76e3.StarlyCardMarket.SaleOfferAccepted"
 
 // atm this just converts if there are FT involved or not
 func Convert(address string, entry core.Entry, state *core.State) ([]Event, error) {
@@ -103,6 +104,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		//TODO consider saving as skipped
 		return nil, nil
 	}
+	//
 	//TODO: lending pool
 	ignoreHashes := []string{
 		//these can just be thrown away
@@ -522,6 +524,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 
 	}
+
 	if scriptHash == "cc36a9819d06d40062b621ec505d97ebd9238d9e096cdd2a4b84a3fd1e1df5e5" {
 		//versus settle
 		eventType := "A.d796ff17107bbff6.Auction.TokenPurchased"
@@ -783,9 +786,42 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		return entries, nil
 	}
 
+	//TODO: what about the missing last FT transfer
+	//this only happens when we buy
+	if entry.HasEvent(StarlyMarketBuy) && numberOfFTTransfers == 2 {
+		token := entry.Tokens[0]
+
+		extraToken := entry.Tokens[1]
+		if token.Type == "Deposit" {
+			token, extraToken = extraToken, token
+		}
+		nft := entry.NFT[0]
+
+		eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+		ev := event
+		ev.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
+		ev.ReceivedCurrency = ConvertCurrency(extraToken.Token)
+		event.Description = fmt.Sprintf("buy starly extra fusd %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, token.Counterparty)
+		entries = append(entries, ev)
+
+		if nft.To == address {
+			//buy
+
+			event.SentAmount = fmt.Sprintf("%v", token.Amount)
+			event.SentCurrency = ConvertCurrency(token.Token)
+			event.ReceivedAmount = "1"
+			event.ReceivedCurrency = state.AddNFTID(eventName, fmt.Sprint(nft.Id))
+			event.Description = fmt.Sprintf("buy starly  %s nft=%s-%s counterparty=%s", event.Description, eventName, nft.Id, token.Counterparty)
+
+		} else {
+			panic("Should never happen")
+		}
+		entries = append(entries, event)
+
+		return entries, nil
+	}
 	if entry.HasEvent(ZayTraderEvent) {
 
-		//TODO: if we only have a single entry on one side we can do this better
 		for _, nft := range entry.NFT {
 
 			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
@@ -927,7 +963,6 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 	//uhm ok, what is this?
 	if numberOfFTTransfers == 2 {
-
 		event.Label = "Trade"
 		for _, token := range entry.Tokens {
 			if token.Type == "Withdraw" {

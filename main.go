@@ -15,9 +15,9 @@ import (
 // TODO: found bug where I am not getting all nft/token transfers... this bloody api...
 func main() {
 
-	accountId := "0xdf868d4de6d2e0ab" //wk
+	//accountId := "0xdf868d4de6d2e0ab" //wk
 	//accountId := "0x886f3aeaf848c535" //me
-	//accountId := "0x89c2fa6cf7607b2b" //sodda
+	accountId := "0x89c2fa6cf7607b2b" //sodda
 	//accountId := "0x8e1231b8b045cf96"
 	//accountId := "0x5b64854c16a96267"
 

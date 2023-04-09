@@ -20,7 +20,8 @@ type DateTime struct {
 
 // Convert the internal date as CSV string
 func (date *DateTime) MarshalCSV() (string, error) {
-	return date.Time.UTC().String(), nil
+
+	return date.Time.UTC().Format(time.DateTime), nil
 }
 
 // You could also use the standard Stringer interface
