@@ -231,11 +231,12 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 		numberOfComponentsBurned := len(destroyedIds)
 		amountPerComponent := roundFloat(1.0/float64(numberOfComponentsBurned), 6)
 		flovatarId := ""
+		eventName := ""
 
 		subComponents := []core.NFTTransfer{}
 		burnedComponents := []core.NFTTransfer{}
 		for _, nft := range entry.NFT {
-			eventName := fmt.Sprintf("%s.NFT", nft.Contract)
+			eventName = fmt.Sprintf("%s.NFT", nft.Contract)
 			if nft.Contract == "A.921ea449dffec68a.Flovatar" {
 				flovatarId = state.AddNFTID(eventName, nft.Id)
 				continue
@@ -266,14 +267,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 			//we have to have the NFTID for this component already if not something is wrong
 			componentId := state.AddNFTID(eventName, nft.Id)
+			err := state.AddCompositeComponent(flovatarId, componentId)
+			if err != nil {
+				return nil, errors.Wrap(err, "mint_flovatar")
+			}
 
-			ev.Description = fmt.Sprintf("flovatar create %s nft=%s-%s", event.Description, eventName, nft.Id)
-			ev.Label = "swap"
-			ev.SentAmount = "1"
-			ev.SentCurrency = componentId
-			ev.ReceivedAmount = fmt.Sprintf("%f", amountPerComponent)
-			ev.ReceivedCurrency = flovatarId
-			entries = append(entries, ev)
 			totalAmount = totalAmount + amountPerComponent
 		}
 
@@ -292,6 +290,12 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				return nil, errors.Wrap(err, "mint_flovatar")
 			}
 		}
+
+		event.Description = fmt.Sprintf("flovatar create %s nft=%s-%s", event.Description, eventName, flovatarId)
+		event.ReceivedAmount = "1"
+		event.ReceivedCurrency = flovatarId
+		entries = append(entries, event)
+
 		return entries, nil
 
 	}
@@ -355,26 +359,19 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 	if scriptHash == "74b37352af81d750cb29f94e21ab449f09b2623e60a0074a75ac3f5aa09a10f7" || scriptHash == "a83c8ec471199a12b496f070ea6036962a49f9c1f7210ed01280ef1603deae71" {
 		//buy flovatarPack
-
-		token := entry.Tokens[0]
-		event.SentAmount = fmt.Sprintf("%v", token.Amount)
-		event.SentCurrency = ConvertCurrency(token.Token)
-		event.ReceivedAmount = "1"
 		eventName := "A.921ea449dffec68a.FlovatarPack"
 		nftId := entry.Transaction.Arguments[1]
-		event.ReceivedCurrency = state.AddNFTID(eventName, nftId)
-		event.Description = fmt.Sprintf("buy flovatar pack %s nft=%s-%s", event.Description, eventName, nftId)
-		entries = append(entries, event)
-
+		token := entry.Tokens[0]
+		state.AddPack(fmt.Sprintf("%s-%s", eventName, nftId), token.Amount, token.Token)
 		return entries, nil
 	}
 
 	if scriptHash == "ecc73476640233932aefa6aed80688e877907968a27337cf35af0a3ee86c6d98" || scriptHash == "d0ec403b0c44a4936d563834bdb322734fa514fb7d6fcc60843a663116cf1724" {
 		//open flovatar pack
 
-		packId, err := state.GetNFTID("A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[0])
+		packDetails, ok := state.GetPack(fmt.Sprintf("%s-%s", "A.921ea449dffec68a.FlovatarPack", entry.Transaction.Arguments[0]))
 		//the pack
-		if err != nil {
+		if !ok {
 			for _, nft := range entry.NFT {
 				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
 				nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
@@ -387,7 +384,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 
 		} else {
 
-			amountOfPackPerEntry := roundFloat(1.0/float64(len(entry.NFT)), 6)
+			amountOfPackPerEntry := roundFloat(packDetails.Amount/float64(len(entry.NFT)), 6)
 
 			totalAmount := 0.0
 			for i, nft := range entry.NFT {
@@ -395,7 +392,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				eventName := fmt.Sprintf("%s.NFT", nft.Contract)
 				nftId := state.AddNFTID(eventName, fmt.Sprint(nft.Id))
 				if i+1 == len(entry.NFT) {
-					amountOfPackPerEntry = 1.0 - totalAmount
+					amountOfPackPerEntry = packDetails.Amount - totalAmount
 				}
 
 				ev := event
@@ -403,7 +400,7 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 				ev.ReceivedAmount = "1"
 				ev.ReceivedCurrency = nftId
 				ev.Description = fmt.Sprintf("open flovatar pack %s nft=%s-%s packid=%s", event.Description, eventName, nft.Id, entry.Transaction.Arguments[0])
-				ev.SentCurrency = packId
+				ev.SentCurrency = ConvertCurrency(packDetails.Currency)
 				ev.SentAmount = fmt.Sprintf("%f", amountOfPackPerEntry)
 
 				entries = append(entries, ev)
@@ -445,22 +442,11 @@ func Convert(address string, entry core.Entry, state *core.State) ([]Event, erro
 			if err != nil {
 				return nil, err
 			}
-			ev.Description = fmt.Sprintf("sell flovatar %s nft=%s-%s counterparty=%s", event.Description, eventName, id, token.Counterparty)
+			ev.Description = fmt.Sprintf("sell flovatar %s nft=%s-%s counterparty=%s check composite status!", event.Description, eventName, id, token.Counterparty)
 			ev.ReceivedAmount = fmt.Sprintf("%v", token.Amount)
 			ev.ReceivedCurrency = ConvertCurrency(token.Token)
 			ev.SentAmount = "1"
 			ev.SentCurrency = nftId
-
-			//TODO: not sure i should do this
-			components := state.GetCompositeComponent(nftId)
-			for _, component := range components {
-				ev2 := event
-				ev2.SentCurrency = component
-				ev2.SentAmount = "1"
-				ev2.Label = "cost"
-				ev2.Description = fmt.Sprintf("%s component %s sold as part of main sale counterparty=%s", ev2.Description, component, token.Counterparty)
-				entries = append(entries, ev2)
-			}
 		}
 		entries = append(entries, ev)
 		return entries, nil

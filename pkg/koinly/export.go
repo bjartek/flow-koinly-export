@@ -37,6 +37,8 @@ type Event struct { // Our example struct, you can use "-" to ignore a field
 	ReceivedCurrency string   `csv:"Received Currency"`
 	FeeAmount        string   `csv:"Fee Amount"`
 	FeeCurrency      string   `csv:"Fee Currency"`
+	NWAmount         string   `csv:"Net Worth Amount"`
+	NWc              string   `csv:"Net Worth Currency"`
 	Label            string   `csv:"Label"`
 	Description      string   `csv:"Description"`
 	TxHash           string   `csv:"TxHash"`
@@ -56,6 +58,22 @@ type DivlyEvent struct {
 	Description      string `csv:"custom_description"`
 }
 
+type CoinPanda struct { // Our example struct, you can use "-" to ignore a field
+	Date             DateTime `csv:"Timestamp (UTC)"`
+	TransactionType  string   `csv:"Type"`
+	SentAmount       string   `csv:"Sent Amount"`
+	SentCurrency     string   `csv:"Sent Currency"`
+	ReceivedAmount   string   `csv:"Received Amount"`
+	ReceivedCurrency string   `csv:"Received Currency"`
+	FeeAmount        string   `csv:"Fee Amount"`
+	FeeCurrency      string   `csv:"Fee Currency"`
+	NWAmount         string   `csv:"Net Worth Amount"`
+	NWc              string   `csv:"Net Worth Currency"`
+	Label            string   `csv:"Label"`
+	Description      string   `csv:"Description"`
+	TxHash           string   `csv:"TxHash"`
+}
+
 func Marshal(events []Event, fileName string) error {
 	csvContent, err := gocsv.MarshalString(&events) // Get all clients as CSV string
 	if err != nil {
@@ -66,6 +84,53 @@ func Marshal(events []Event, fileName string) error {
 
 	bytes := []byte(csvContent)
 	err = os.WriteFile(fileName, bytes, 0644)
+	if err != nil {
+		return err
+	}
+
+	coinPanda := []CoinPanda{}
+	for _, ev := range events {
+
+		typ := "Trade"
+		if ev.SentAmount == "" && ev.ReceivedAmount != "" {
+			typ = "Receive"
+		} else if ev.SentAmount != "" && ev.ReceivedAmount == "" {
+			typ = "Send"
+		}
+
+		if ev.Label == "stake" {
+			//lets try to not add them at all
+			continue
+		} else {
+			ev.Label = ""
+		}
+
+		cpEvent := CoinPanda{
+			Date:             ev.Date,
+			TransactionType:  typ,
+			Label:            ev.Label,
+			SentAmount:       ev.SentAmount,
+			SentCurrency:     ConvertCurrencyDivly(ev.SentCurrency),
+			ReceivedAmount:   ev.ReceivedAmount,
+			ReceivedCurrency: ConvertCurrencyDivly(ev.ReceivedCurrency),
+			FeeAmount:        ev.FeeAmount,
+			FeeCurrency:      ev.FeeCurrency,
+			Description:      fmt.Sprintf("%s tx:%s", ev.Description, ev.TxHash),
+			TxHash:           ev.TxHash,
+		}
+		coinPanda = append(coinPanda, cpEvent)
+
+	}
+	coinPandaCsv, err := gocsv.MarshalString(&coinPanda) // Get all clients as CSV string
+	if err != nil {
+		return err
+	}
+
+	bytes2 := []byte(coinPandaCsv)
+	err = os.WriteFile(fmt.Sprintf("coinpanda-%s", fileName), bytes2, 0644)
+	if err != nil {
+		return err
+	}
 
 	divly := []DivlyEvent{}
 	for _, ev := range events {
@@ -104,7 +169,7 @@ func Marshal(events []Event, fileName string) error {
 		return err
 	}
 
-	bytes2 := []byte(divlyCsvContent)
-	err = os.WriteFile(fmt.Sprintf("divly-%s", fileName), bytes2, 0644)
+	bytes3 := []byte(divlyCsvContent)
+	err = os.WriteFile(fmt.Sprintf("divly-%s", fileName), bytes3, 0644)
 	return err
 }
